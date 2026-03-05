@@ -4,9 +4,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Megaphone, ExternalLink, Send, CheckCircle2, AlertCircle, Link as LinkIcon, TrendingUp, Target, DollarSign, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { useCampaigns, useSubmissions } from "@/lib/portalApi";
+import { useCampaigns, useMe, useSubmissions } from "@/lib/portalApi";
 import type { CampaignResponse, SubmissionResponse } from "@/lib/portalApi";
-import { FORCE_PORTAL_MOCK_MODE, MOCK_CAMPAIGNS, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
+import { FORCE_PORTAL_MOCK_MODE, MOCK_CAMPAIGNS, MOCK_CLIPPER, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
+import { isVipCampaign, resolvePortalRole, ROLE_PERMISSIONS } from "@/modules/app-portal/roleConfig";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -54,12 +55,18 @@ export function CampaignsPage() {
     const a = t.app;
     const c = a.campaigns;
 
+    const { data: clipper, loading: meLoading, error: meError } = useMe();
     const { data: campaigns, loading, error } = useCampaigns();
     const { data: mySubmissions, loading: submissionsLoading, error: submissionsError } = useSubmissions();
 
+    const shouldMockMe = FORCE_PORTAL_MOCK_MODE || (Boolean(meError) && !meLoading);
     const shouldMockCampaigns = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
     const shouldMockSubmissions = FORCE_PORTAL_MOCK_MODE || (Boolean(submissionsError) && !submissionsLoading);
     const isMockMode = shouldMockCampaigns || shouldMockSubmissions;
+
+    const clipperData = shouldMockMe ? MOCK_CLIPPER : (clipper ?? null);
+    const role = resolvePortalRole(clipperData);
+    const rolePermissions = ROLE_PERMISSIONS[role];
 
     const campaignsData = shouldMockCampaigns ? MOCK_CAMPAIGNS : (campaigns ?? []);
     const submissionsData = shouldMockSubmissions ? MOCK_SUBMISSIONS : (mySubmissions ?? []);
@@ -74,6 +81,10 @@ export function CampaignsPage() {
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">{c.title}</h1>
                 <p className="text-slate-500 text-sm font-medium">{c.subtitle}</p>
+                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
+                    <span className={`w-2 h-2 rounded-full ${role === "vip" ? "bg-amber-400" : "bg-slate-400"}`} />
+                    Role: {role.toUpperCase()} · ส่งได้สูงสุด {rolePermissions.dailySubmissionLimit} วิดีโอ/วัน
+                </div>
             </div>
 
             {/* How It Works */}
@@ -97,6 +108,7 @@ export function CampaignsPage() {
                         : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
                     {error && <span className="block text-xs mt-1">campaigns: {error}</span>}
                     {submissionsError && <span className="block text-xs">submissions: {submissionsError}</span>}
+                    {meError && <span className="block text-xs">me: {meError}</span>}
                 </div>
             )}
 
@@ -121,6 +133,8 @@ export function CampaignsPage() {
                                 campaign={campaign}
                                 isJoined={joinedCampaignNames.has(campaign.campaign_name)}
                                 mySubmissions={submissionsData.filter((s) => s.campaign_name === campaign.campaign_name)}
+                                role={role}
+                                rolePermissions={rolePermissions}
                             />
                         ))
                     )}
@@ -154,8 +168,12 @@ export function CampaignsPage() {
 
 // ─── Campaign Card ────────────────────────────────────────────────────────────
 
-function CampaignCard({ campaign, isJoined, mySubmissions }: {
-    campaign: CampaignResponse; isJoined: boolean; mySubmissions: SubmissionResponse[];
+function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions }: {
+    campaign: CampaignResponse;
+    isJoined: boolean;
+    mySubmissions: SubmissionResponse[];
+    role: "member" | "vip";
+    rolePermissions: { canAccessVipCampaign: boolean; payoutBonusPercent: number };
 }) {
     const { t } = useLanguage();
     const a = t.app;
@@ -172,6 +190,8 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
     const viewProgress = Math.round((campaign.total_views_generated / campaign.view_target) * 100);
     const isViewsGrowing = campaign.total_views_generated > 0;
     const isBudgetDepleted = budgetRemaining <= 0;
+    const vipCampaign = isVipCampaign(campaign);
+    const canJoinCampaign = !vipCampaign || rolePermissions.canAccessVipCampaign;
 
     function getSubStatusLabel(status: string) {
         if (status.includes("🟢 Active")) return a.status.activeEarning;
@@ -207,9 +227,16 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
                             <p className="text-slate-500 text-sm font-medium">{campaign.client_name}</p>
                         </div>
                     </div>
-                    <span className="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide shrink-0">
-                        {a.common.active}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                        {vipCampaign && (
+                            <span className="bg-amber-100 text-amber-700 text-[11px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                                VIP
+                            </span>
+                        )}
+                        <span className="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide">
+                            {a.common.active}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Stats */}
@@ -220,7 +247,9 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
                             <span className="text-[10px] font-bold uppercase tracking-wider">{c.rate}</span>
                         </div>
                         <p className="text-xl font-extrabold text-slate-900">฿{campaign.cost_per_thousand_views}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">{c.per1kViews}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                            {c.per1kViews}{rolePermissions.payoutBonusPercent > 0 ? ` (+${rolePermissions.payoutBonusPercent}% VIP)` : ""}
+                        </p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
                         <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
@@ -257,6 +286,7 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
                     {isJoined ? (
                         <div className="flex items-center gap-2 flex-wrap">
                             <button onClick={() => setShowJoinForm(!showJoinForm)}
+                                disabled={!canJoinCampaign}
                                 className="flex items-center gap-2 text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-xl transition-colors">
                                 <LinkIcon size={15} /> {c.submitAnotherVideo}
                             </button>
@@ -269,12 +299,18 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
                             )}
                         </div>
                     ) : (
-                        <button onClick={() => setShowJoinForm(!showJoinForm)}
-                            className="flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 px-5 py-2.5 rounded-xl transition-opacity shadow-sm">
-                            <Megaphone size={15} /> {c.joinCampaign}
+                        <button onClick={() => setShowJoinForm(!showJoinForm)} disabled={!canJoinCampaign}
+                            className="flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 px-5 py-2.5 rounded-xl transition-opacity shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                            <Megaphone size={15} /> {canJoinCampaign ? c.joinCampaign : "สำหรับ VIP เท่านั้น"}
                         </button>
                     )}
                 </div>
+
+                {!canJoinCampaign && (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3">
+                        แคมเปญนี้เป็น VIP campaign กรุณาอัปเกรดบัญชีเพื่อเข้าร่วม
+                    </p>
+                )}
             </div>
 
             {/* Join Form */}

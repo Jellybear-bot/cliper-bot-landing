@@ -7,6 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useMe, usePayouts } from "@/lib/portalApi";
 import type { PayoutResponse } from "@/lib/portalApi";
 import { FORCE_PORTAL_MOCK_MODE, MOCK_CLIPPER, MOCK_PAYOUTS } from "@/modules/app-portal/mockData";
+import { resolvePortalRole, ROLE_PERMISSIONS } from "@/modules/app-portal/roleConfig";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,8 @@ export function WithdrawPage() {
 
     const clipperData = shouldMockMe ? MOCK_CLIPPER : (clipper ?? null);
     const payoutData = shouldMockPayouts ? MOCK_PAYOUTS : (payouts ?? []);
+    const role = resolvePortalRole(clipperData);
+    const rolePermissions = ROLE_PERMISSIONS[role];
 
     const [amount, setAmount] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -57,7 +60,8 @@ export function WithdrawPage() {
 
     const pendingBalance = clipperData?.pending_balance ?? 0;
     const parsedAmount = parseInt(amount, 10);
-    const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= 100 && parsedAmount % 100 === 0 && parsedAmount <= pendingBalance;
+    const minWithdrawAmount = rolePermissions.minWithdrawAmount;
+    const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= minWithdrawAmount && parsedAmount % 100 === 0 && parsedAmount <= pendingBalance;
 
     const hasPendingRequest = payoutData.some((p: PayoutResponse) => p.status.includes("⏳"));
 
@@ -72,7 +76,7 @@ export function WithdrawPage() {
     const validationMessage = () => {
         if (!amount) return null;
         if (isNaN(parsedAmount) || parsedAmount <= 0) return { type: "error", text: w.validation.invalid };
-        if (parsedAmount < 100) return { type: "error", text: w.validation.minAmount };
+        if (parsedAmount < minWithdrawAmount) return { type: "error", text: `ขั้นต่ำ ${fmt(minWithdrawAmount)} บาท` };
         if (parsedAmount % 100 !== 0) return { type: "error", text: w.validation.multiple };
         if (parsedAmount > pendingBalance) return { type: "error", text: w.validation.insufficient };
         return {
@@ -104,6 +108,10 @@ export function WithdrawPage() {
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">{w.title}</h1>
                 <p className="text-slate-500 text-sm font-medium">{w.subtitle}</p>
+                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
+                    <span className={`w-2 h-2 rounded-full ${role === "vip" ? "bg-amber-400" : "bg-slate-400"}`} />
+                    Role: {role.toUpperCase()} · ถอนขั้นต่ำ ฿{fmt(minWithdrawAmount)}
+                </div>
             </div>
 
             {isMockMode && (
@@ -124,7 +132,7 @@ export function WithdrawPage() {
                         <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-7 text-white shadow-lg">
                             <p className="text-sm font-semibold text-blue-200 mb-1">{w.availableBalance}</p>
                             <p className="text-5xl font-extrabold mb-1">฿{fmt(pendingBalance)}</p>
-                            <p className="text-blue-300 text-sm font-medium">{w.minNote}</p>
+                            <p className="text-blue-300 text-sm font-medium">{w.minNote} (ขั้นต่ำ ฿{fmt(minWithdrawAmount)})</p>
                             <div className="mt-5 pt-5 border-t border-white/20 flex items-center gap-6 text-sm">
                                 <div>
                                     <p className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-0.5">{w.totalEarned}</p>
@@ -182,7 +190,7 @@ export function WithdrawPage() {
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">฿</span>
                                     <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
-                                        min={100} step={100} max={pendingBalance} placeholder="0"
+                                        min={minWithdrawAmount} step={100} max={pendingBalance} placeholder="0"
                                         className="w-full pl-8 pr-4 py-3.5 text-xl font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                                 </div>
                                 <AnimatePresence>

@@ -10,6 +10,7 @@ import { mockLogout } from "@/modules/app-portal/services/auth/actions";
 import { useLanguage } from "@/context/LanguageContext";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getLocalRoleOverride, setLocalRoleOverride, type PortalRole } from "@/modules/app-portal/roleConfig";
 
 // ─── Mock Notifications ───────────────────────────────────────────────────────
 
@@ -73,6 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isNotiOpen, setIsNotiOpen] = useState(false);
+    const [roleOverride, setRoleOverride] = useState<PortalRole | null>(null);
     const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
     const notiRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +93,21 @@ export function AppShell({ children }: { children: ReactNode }) {
         document.addEventListener("mousedown", handleClick);
         return () => document.removeEventListener("mousedown", handleClick);
     }, []);
+
+    useEffect(() => {
+        const syncRole = () => setRoleOverride(getLocalRoleOverride());
+        syncRole();
+        window.addEventListener("portal-role-updated", syncRole);
+        window.addEventListener("storage", syncRole);
+        return () => {
+            window.removeEventListener("portal-role-updated", syncRole);
+            window.removeEventListener("storage", syncRole);
+        };
+    }, []);
+
+    function handleSetRole(role: PortalRole) {
+        setLocalRoleOverride(roleOverride === role ? null : role);
+    }
 
     function markAllRead() {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
@@ -193,6 +210,24 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3">
+                        {/* Local Role Switcher */}
+                        <div className="hidden md:flex items-center gap-1 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-1">
+                            <button
+                                onClick={() => handleSetRole("member")}
+                                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "member" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                title="Switch local test role to member"
+                            >
+                                MEMBER
+                            </button>
+                            <button
+                                onClick={() => handleSetRole("vip")}
+                                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "vip" ? "bg-amber-500 text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                title="Switch local test role to vip"
+                            >
+                                VIP
+                            </button>
+                        </div>
+
                         {/* Language Toggle */}
                         <div className="flex items-center rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
                             <button

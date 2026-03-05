@@ -5,7 +5,7 @@ export const FORCE_PORTAL_MOCK_MODE = process.env.NEXT_PUBLIC_PORTAL_MOCK_MODE =
 export const MOCK_CLIPPER: ClipperResponse = {
     discord_id: "demo-000",
     username: "demo_clipper",
-    payment_info: "พร้อมเพย์: demo@example.com",
+    payment_info: "role:vip | พร้อมเพย์: demo@example.com",
     bank_no: "123-4-56789-0",
     bank_type: "SCB",
     pending_balance: 12500,
@@ -45,7 +45,7 @@ export const MOCK_CAMPAIGNS: CampaignResponse[] = [
     },
     {
         id: "103",
-        campaign_name: "Mega Sale Final Push",
+        campaign_name: "[VIP] Mega Sale Final Push",
         client_name: "FlashNow",
         total_budget: 70000,
         view_target: 1200000,
