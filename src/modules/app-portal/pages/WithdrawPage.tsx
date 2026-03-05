@@ -1,0 +1,282 @@
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Wallet, CheckCircle2, AlertCircle, Clock, Building2, ArrowDownToLine, Info, XCircle, Ban } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { useMe, usePayouts } from "@/lib/portalApi";
+import type { PayoutResponse } from "@/lib/portalApi";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const fmt = (n: number) => new Intl.NumberFormat("th-TH").format(n);
+const fmtDate = (s: string) => new Date(s).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
+const PRESET_AMOUNTS = [500, 1000, 5000, 10000];
+
+function getPayoutStatusStyle(status: string) {
+    if (status.includes("✅")) return { badge: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: <CheckCircle2 size={14} /> };
+    if (status.includes("⏳")) return { badge: "bg-amber-100 text-amber-700 border-amber-200", icon: <Clock size={14} /> };
+    if (status.includes("❌")) return { badge: "bg-rose-100 text-rose-700 border-rose-200", icon: <XCircle size={14} /> };
+    if (status.includes("🚫")) return { badge: "bg-slate-100 text-slate-600 border-slate-200", icon: <Ban size={14} /> };
+    return { badge: "bg-slate-100 text-slate-600 border-slate-200", icon: <Clock size={14} /> };
+}
+
+// ─── Skeletons ────────────────────────────────────────────────────────────────
+
+function BalanceSkeleton() {
+    return (
+        <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-7 shadow-lg animate-pulse">
+            <div className="h-4 bg-white/20 rounded w-32 mb-2" />
+            <div className="h-12 bg-white/30 rounded w-48 mb-1" />
+            <div className="h-3 bg-white/20 rounded w-56" />
+        </div>
+    );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export function WithdrawPage() {
+    const { t } = useLanguage();
+    const a = t.app;
+    const w = a.withdraw;
+
+    const { data: clipper, loading: meLoading, error: meError } = useMe();
+    const { data: payouts, loading: payoutsLoading, refetch } = usePayouts();
+
+    const [amount, setAmount] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+
+    const pendingBalance = clipper?.pending_balance ?? 0;
+    const parsedAmount = parseInt(amount, 10);
+    const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= 100 && parsedAmount % 100 === 0 && parsedAmount <= pendingBalance;
+
+    const hasPendingRequest = (payouts ?? []).some((p: PayoutResponse) => p.status.includes("⏳"));
+
+    function getPayoutStatusLabel(status: string) {
+        if (status.includes("✅")) return a.status.paid;
+        if (status.includes("⏳")) return a.status.pending;
+        if (status.includes("❌")) return a.status.rejected;
+        if (status.includes("🚫")) return a.status.cancelled;
+        return status;
+    }
+
+    const validationMessage = () => {
+        if (!amount) return null;
+        if (isNaN(parsedAmount) || parsedAmount <= 0) return { type: "error", text: w.validation.invalid };
+        if (parsedAmount < 100) return { type: "error", text: w.validation.minAmount };
+        if (parsedAmount % 100 !== 0) return { type: "error", text: w.validation.multiple };
+        if (parsedAmount > pendingBalance) return { type: "error", text: w.validation.insufficient };
+        return {
+            type: "ok",
+            text: w.validation.ok
+                .replace("{amount}", fmt(parsedAmount))
+                .replace("{bank}", clipper?.bank_type ?? "")
+                .replace("{no}", clipper?.bank_no ?? ""),
+        };
+    };
+
+    const handleWithdraw = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!isValidAmount) return;
+        setSubmitting(true);
+        // NOTE: No HTTP endpoint for payout request yet — done via Discord bot !withdraw command
+        // Placeholder implementation
+        await new Promise((r) => setTimeout(r, 1200));
+        setSubmitStatus("success");
+        setAmount("");
+        setSubmitting(false);
+        setTimeout(() => { setSubmitStatus("idle"); refetch(); }, 3000);
+    };
+
+    const validation = validationMessage();
+
+    return (
+        <div className="space-y-7 pb-12 w-full">
+            <div>
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">{w.title}</h1>
+                <p className="text-slate-500 text-sm font-medium">{w.subtitle}</p>
+            </div>
+
+            {meError && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium px-4 py-3 rounded-xl">
+                    ⚠️ โหลดข้อมูลไม่ได้: {meError}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {/* Left */}
+                <div className="xl:col-span-2 space-y-5">
+                    {/* Balance Card */}
+                    {meLoading ? <BalanceSkeleton /> : (
+                        <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-7 text-white shadow-lg">
+                            <p className="text-sm font-semibold text-blue-200 mb-1">{w.availableBalance}</p>
+                            <p className="text-5xl font-extrabold mb-1">฿{fmt(pendingBalance)}</p>
+                            <p className="text-blue-300 text-sm font-medium">{w.minNote}</p>
+                            <div className="mt-5 pt-5 border-t border-white/20 flex items-center gap-6 text-sm">
+                                <div>
+                                    <p className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-0.5">{w.totalEarned}</p>
+                                    <p className="font-bold text-white">฿{fmt(clipper?.total_earnings ?? 0)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-0.5">{w.totalPaidOut}</p>
+                                    <p className="font-bold text-white">฿{fmt(clipper?.paid_amount ?? 0)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pending Warning */}
+                    {hasPendingRequest && (
+                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+                            <Clock size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-bold text-amber-800">{w.pendingWarningTitle}</p>
+                                <p className="text-xs text-amber-600 mt-0.5">{w.pendingWarningDesc}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Withdraw Form */}
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                        <h2 className="font-bold text-slate-800 mb-5 flex items-center gap-2">
+                            <ArrowDownToLine size={18} className="text-slate-400" />
+                            {w.requestWithdrawal}
+                        </h2>
+                        <form onSubmit={handleWithdraw} className="space-y-5">
+                            {/* Preset */}
+                            <div>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{w.quickSelect}</p>
+                                <div className="flex gap-2 flex-wrap">
+                                    {PRESET_AMOUNTS.map((preset) => (
+                                        <button key={preset} type="button" onClick={() => setAmount(String(preset))}
+                                            disabled={preset > pendingBalance}
+                                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${amount === String(preset) ? "bg-blue-600 text-white border-blue-600" : preset > pendingBalance ? "bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed" : "bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:text-blue-600"}`}>
+                                            ฿{fmt(preset)}
+                                        </button>
+                                    ))}
+                                    <button type="button"
+                                        onClick={() => setAmount(String(Math.floor(pendingBalance / 100) * 100))}
+                                        disabled={pendingBalance < 100}
+                                        className="px-4 py-2 rounded-xl text-sm font-bold border bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all">
+                                        {w.max}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Amount */}
+                            <div>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{w.amountLabel}</p>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">฿</span>
+                                    <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
+                                        min={100} step={100} max={pendingBalance} placeholder="0"
+                                        className="w-full pl-8 pr-4 py-3.5 text-xl font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                                </div>
+                                <AnimatePresence>
+                                    {validation && (
+                                        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                            className={`flex items-center gap-2 text-xs font-semibold mt-2 ${validation.type === "ok" ? "text-emerald-600" : "text-rose-600"}`}>
+                                            {validation.type === "ok" ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+                                            {validation.text}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Bank Info */}
+                            {!meLoading && clipper && (
+                                <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                    <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                                        <Building2 size={18} className="text-slate-500" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-700">{clipper.bank_type || "ยังไม่มีบัญชีธนาคาร"}</p>
+                                        <p className="text-xs text-slate-400 font-medium">{clipper.bank_no || "-"}</p>
+                                    </div>
+                                    {clipper.bank_no && (
+                                        <div className="ml-auto">
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">{w.verified}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <button type="submit"
+                                disabled={!isValidAmount || submitting || hasPendingRequest || meLoading || !clipper?.bank_no}
+                                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                                <Wallet size={18} />
+                                {submitting ? w.processing : w.requestWithdrawal}
+                            </button>
+
+                            <AnimatePresence>
+                                {submitStatus === "success" && (
+                                    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                        className="flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl">
+                                        <CheckCircle2 size={16} /> {w.successMsg}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </form>
+                    </div>
+                </div>
+
+                {/* Right */}
+                <div className="space-y-5">
+                    {/* Rules */}
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
+                            <Info size={16} className="text-slate-400" /> {w.rulesTitle}
+                        </h3>
+                        <ul className="space-y-2.5">
+                            {w.rules.map((rule, i) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                                    <span className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
+                                    {rule}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* History */}
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-slate-100">
+                            <h3 className="font-bold text-slate-800 text-sm">{w.history}</h3>
+                        </div>
+                        <div className="divide-y divide-slate-100">
+                            {payoutsLoading ? (
+                                Array.from({ length: 3 }).map((_, i) => (
+                                    <div key={i} className="flex items-center gap-3 px-5 py-3.5 animate-pulse">
+                                        <div className="flex-1 space-y-1.5">
+                                            <div className="h-4 bg-slate-200 rounded w-20" />
+                                            <div className="h-3 bg-slate-100 rounded w-16" />
+                                        </div>
+                                        <div className="h-5 bg-slate-200 rounded w-16" />
+                                    </div>
+                                ))
+                            ) : (payouts ?? []).length === 0 ? (
+                                <p className="text-center text-slate-400 text-sm py-8">{w.noPayouts}</p>
+                            ) : (
+                                (payouts ?? []).map((p: PayoutResponse) => {
+                                    const { badge, icon } = getPayoutStatusStyle(p.status);
+                                    return (
+                                        <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-slate-700">฿{fmt(p.amount)}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5">{fmtDate(p.created_at)}</p>
+                                                {p.reason && <p className="text-[11px] text-rose-500 mt-0.5">{p.reason}</p>}
+                                            </div>
+                                            <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wide ${badge}`}>
+                                                {icon} {getPayoutStatusLabel(p.status)}
+                                            </span>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

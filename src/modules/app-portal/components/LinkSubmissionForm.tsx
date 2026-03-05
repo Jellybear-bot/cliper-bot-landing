@@ -37,27 +37,17 @@ export function LinkSubmissionForm() {
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
             className="w-full relative group"
         >
-            {/* Playful Floating Elements Behind */}
-            <motion.div
-                animate={{
-                    y: [0, -10, 0],
-                    rotate: [0, 5, 0]
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-6 -right-6 w-16 h-16 bg-gradient-to-br from-amber-400 to-rose-400 rounded-3xl blur-xl opacity-60 z-0"
-            />
-
-            <div className="relative bg-white/70 backdrop-blur-2xl border border-white/80 rounded-[2rem] p-8 sm:p-10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] overflow-hidden">
+            <div className="relative bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 shadow-sm overflow-hidden">
                 {/* Decorative glassy gradients inside */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-rose-400/10 blur-[80px] rounded-full pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-400/10 blur-[80px] rounded-full pointer-events-none" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 blur-[80px] rounded-full pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-50/50 blur-[80px] rounded-full pointer-events-none" />
 
                 <div className="mb-10 relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-100 text-violet-700 font-bold text-xs uppercase tracking-widest mb-4 border border-violet-200 shadow-sm">
-                        <Sparkles size={14} className="text-violet-500" />
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-bold text-xs uppercase tracking-widest mb-4 border border-blue-100 shadow-sm">
+                        <Sparkles size={14} className="text-blue-500" />
                         <span>New Campaign</span>
                     </div>
-                    <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">
+                    <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
                         Drop your link here.
                     </h2>
                     <p className="text-slate-500 text-base font-medium">
@@ -127,7 +117,7 @@ export function LinkSubmissionForm() {
                             disabled={isSubmitting || !url}
                             whileHover={!isSubmitting && url ? { scale: 1.05 } : {}}
                             whileTap={!isSubmitting && url ? { scale: 0.95 } : {}}
-                            className="ml-auto w-full sm:w-auto relative overflow-hidden group flex items-center justify-center gap-3 bg-gradient-to-r from-violet-600 via-rose-500 to-amber-500 text-white font-bold px-8 py-4 px-10 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)]"
+                            className="ml-auto w-full sm:w-auto relative overflow-hidden group flex items-center justify-center gap-3 bg-gradient-to-r from-violet-600 via-rose-500 to-amber-500 text-white font-bold px-10 py-4 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_10px_30px_-10px_rgba(139,92,246,0.6)]"
                         >
                             <span className="relative z-10 flex items-center gap-2 text-lg">
                                 {isSubmitting ? "Sending..." : "Launch Campaign"}
