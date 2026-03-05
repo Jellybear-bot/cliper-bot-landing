@@ -5,6 +5,7 @@ import { Video, Eye, DollarSign, ThumbsUp, MessageCircle, Share2, ExternalLink }
 import { useLanguage } from "@/context/LanguageContext";
 import { useSubmissions } from "@/lib/portalApi";
 import type { SubmissionResponse } from "@/lib/portalApi";
+import { FORCE_PORTAL_MOCK_MODE, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -53,7 +54,8 @@ export function SubmissionsPage() {
     const { data: submissions, loading, error } = useSubmissions();
     const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
-    const list = submissions ?? [];
+    const shouldMockSubmissions = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
+    const list = shouldMockSubmissions ? MOCK_SUBMISSIONS : (submissions ?? []);
 
     function getStatusLabel(status: string) {
         if (status.includes("🟢 Active")) return a.status.activeEarning;
@@ -91,19 +93,22 @@ export function SubmissionsPage() {
                 <p className="text-slate-500 text-sm font-medium">{s.subtitle}</p>
             </div>
 
-            {/* Error */}
-            {error && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium px-4 py-3 rounded-xl">
-                    ⚠️ โหลดข้อมูลไม่ได้: {error}
+            {/* Mockup Banner */}
+            {shouldMockSubmissions && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                    {FORCE_PORTAL_MOCK_MODE
+                        ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                    {error && <span className="block text-xs mt-1">submissions: {error}</span>}
                 </div>
             )}
 
             {/* Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <SummaryCard label={s.totalSubmitted} value={loading ? "..." : String(list.length)} icon={<Video size={18} />} iconBg="bg-slate-100" iconColor="text-slate-600" />
-                <SummaryCard label={s.activeEarning} value={loading ? "..." : String(activeCount)} icon={<Eye size={18} />} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
-                <SummaryCard label={s.totalViews} value={loading ? "..." : fmtViews(totalViews)} icon={<Eye size={18} />} iconBg="bg-blue-100" iconColor="text-blue-600" />
-                <SummaryCard label={s.totalEarnings} value={loading ? "..." : `฿${fmt(totalEarnings)}`} icon={<DollarSign size={18} />} iconBg="bg-violet-100" iconColor="text-violet-600" />
+                <SummaryCard label={s.totalSubmitted} value={loading && !shouldMockSubmissions ? "..." : String(list.length)} icon={<Video size={18} />} iconBg="bg-slate-100" iconColor="text-slate-600" />
+                <SummaryCard label={s.activeEarning} value={loading && !shouldMockSubmissions ? "..." : String(activeCount)} icon={<Eye size={18} />} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
+                <SummaryCard label={s.totalViews} value={loading && !shouldMockSubmissions ? "..." : fmtViews(totalViews)} icon={<Eye size={18} />} iconBg="bg-blue-100" iconColor="text-blue-600" />
+                <SummaryCard label={s.totalEarnings} value={loading && !shouldMockSubmissions ? "..." : `฿${fmt(totalEarnings)}`} icon={<DollarSign size={18} />} iconBg="bg-violet-100" iconColor="text-violet-600" />
             </div>
 
             {/* Filter Tabs */}
@@ -126,7 +131,7 @@ export function SubmissionsPage() {
 
             {/* List */}
             <div className="space-y-3">
-                {loading ? (
+                {loading && !shouldMockSubmissions ? (
                     Array.from({ length: 3 }).map((_, i) => (
                         <div key={i} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                             <SkeletonRow />

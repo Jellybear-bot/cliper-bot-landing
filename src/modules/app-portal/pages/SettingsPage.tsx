@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Building2, Shield, Eye, TrendingUp, CheckCircle2, Edit3, Save, X, BadgeDollarSign, Video } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useMe } from "@/lib/portalApi";
+import { FORCE_PORTAL_MOCK_MODE, MOCK_CLIPPER } from "@/modules/app-portal/mockData";
 
 const BANK_OPTIONS = [
     "กสิกรไทย (KBANK)", "กรุงเทพ (BBL)", "ไทยพาณิชย์ (SCB)",
@@ -78,6 +79,8 @@ export function SettingsPage() {
     const s = a.settings;
 
     const { data: clipper, loading, error } = useMe();
+    const shouldMockMe = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
+    const clipperData = shouldMockMe ? MOCK_CLIPPER : (clipper ?? null);
 
     const [editingBank, setEditingBank] = useState(false);
     const [bankNo, setBankNo] = useState("");
@@ -86,11 +89,11 @@ export function SettingsPage() {
 
     // Sync bank form state when data loads
     useEffect(() => {
-        if (clipper) {
-            setBankNo(clipper.bank_no ?? "");
-            setBankType(clipper.bank_type || BANK_OPTIONS[0]);
+        if (clipperData) {
+            setBankNo(clipperData.bank_no ?? "");
+            setBankType(clipperData.bank_type || BANK_OPTIONS[0]);
         }
-    }, [clipper]);
+    }, [clipperData]);
 
     const handleSaveBank = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -104,11 +107,11 @@ export function SettingsPage() {
 
     const handleCancelEdit = () => {
         setEditingBank(false);
-        setBankNo(clipper?.bank_no ?? "");
-        setBankType(clipper?.bank_type || BANK_OPTIONS[0]);
+        setBankNo(clipperData?.bank_no ?? "");
+        setBankType(clipperData?.bank_type || BANK_OPTIONS[0]);
     };
 
-    const isNormal = clipper?.status.includes("🟢") ?? true;
+    const isNormal = clipperData?.status.includes("🟢") ?? true;
 
     return (
         <div className="space-y-7 pb-12 w-full max-w-3xl">
@@ -117,14 +120,17 @@ export function SettingsPage() {
                 <p className="text-slate-500 text-sm font-medium">{s.subtitle}</p>
             </div>
 
-            {error && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium px-4 py-3 rounded-xl">
-                    ⚠️ โหลดข้อมูลไม่ได้: {error}
+            {shouldMockMe && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                    {FORCE_PORTAL_MOCK_MODE
+                        ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                    {error && <span className="block text-xs mt-1">me: {error}</span>}
                 </div>
             )}
 
             {/* Profile Card */}
-            {loading ? <ProfileSkeleton /> : (
+            {loading && !shouldMockMe ? <ProfileSkeleton /> : (
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
                         <User size={16} className="text-slate-400" />
@@ -133,11 +139,11 @@ export function SettingsPage() {
                     <div className="p-6">
                         <div className="flex items-center gap-5">
                             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-extrabold text-2xl shadow-md shrink-0">
-                                {(clipper?.username ?? "?").slice(0, 2).toUpperCase()}
+                                {(clipperData?.username ?? "?").slice(0, 2).toUpperCase()}
                             </div>
                             <div>
-                                <h3 className="text-xl font-extrabold text-slate-900">{clipper?.username ?? "-"}</h3>
-                                <p className="text-sm text-slate-500 font-medium mt-0.5">{s.discordId}: {clipper?.discord_id ?? "-"}</p>
+                                <h3 className="text-xl font-extrabold text-slate-900">{clipperData?.username ?? "-"}</h3>
+                                <p className="text-sm text-slate-500 font-medium mt-0.5">{s.discordId}: {clipperData?.discord_id ?? "-"}</p>
                                 <div className="flex items-center gap-2 mt-2">
                                     <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg ${isNormal ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
                                         <Shield size={12} />
@@ -149,11 +155,11 @@ export function SettingsPage() {
                         <div className="mt-6 grid grid-cols-2 gap-4">
                             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">{s.memberSince}</p>
-                                <p className="text-sm font-bold text-slate-700">{clipper ? fmtDate(clipper.created_at) : "-"}</p>
+                                <p className="text-sm font-bold text-slate-700">{clipperData ? fmtDate(clipperData.created_at) : "-"}</p>
                             </div>
                             <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">{s.accountStatus}</p>
-                                <p className="text-sm font-bold text-slate-700">{clipper?.status ?? "-"}</p>
+                                <p className="text-sm font-bold text-slate-700">{clipperData?.status ?? "-"}</p>
                             </div>
                         </div>
                     </div>
@@ -167,7 +173,7 @@ export function SettingsPage() {
                         <Building2 size={16} className="text-slate-400" />
                         <h2 className="font-bold text-slate-800 text-sm">{s.bankAccount}</h2>
                     </div>
-                    {!editingBank && !loading && (
+                    {!editingBank && (!loading || shouldMockMe) && (
                         <button onClick={() => setEditingBank(true)}
                             className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors border border-blue-200">
                             <Edit3 size={13} /> {a.common.edit}
@@ -184,7 +190,7 @@ export function SettingsPage() {
                         )}
                     </AnimatePresence>
 
-                    {loading ? (
+                    {loading && !shouldMockMe ? (
                         <div className="flex items-center gap-4 animate-pulse">
                             <div className="w-12 h-12 rounded-2xl bg-slate-200 shrink-0" />
                             <div className="space-y-2 flex-1">
@@ -198,10 +204,10 @@ export function SettingsPage() {
                                 <Building2 size={22} className="text-slate-500" />
                             </div>
                             <div>
-                                {clipper?.bank_no ? (
+                                {clipperData?.bank_no ? (
                                     <>
-                                        <p className="font-bold text-slate-800">{clipper.bank_type}</p>
-                                        <p className="text-sm text-slate-500 font-medium mt-0.5">{clipper.bank_no}</p>
+                                        <p className="font-bold text-slate-800">{clipperData.bank_type}</p>
+                                        <p className="text-sm text-slate-500 font-medium mt-0.5">{clipperData.bank_no}</p>
                                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md mt-2">
                                             <CheckCircle2 size={11} /> {a.common.verified}
                                         </span>
@@ -246,17 +252,17 @@ export function SettingsPage() {
             </div>
 
             {/* Account Stats */}
-            {loading ? <StatsSkeleton /> : (
+            {loading && !shouldMockMe ? <StatsSkeleton /> : (
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
                         <TrendingUp size={16} className="text-slate-400" />
                         <h2 className="font-bold text-slate-800 text-sm">{s.accountStats}</h2>
                     </div>
                     <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <StatItem icon={<Eye size={20} />} label={s.totalViews} value={fmtViews(clipper?.total_views ?? 0)} iconBg="bg-blue-100" iconColor="text-blue-600" />
-                        <StatItem icon={<BadgeDollarSign size={20} />} label={s.totalEarned} value={`฿${fmt(clipper?.total_earnings ?? 0)}`} iconBg="bg-violet-100" iconColor="text-violet-600" />
-                        <StatItem icon={<CheckCircle2 size={20} />} label={s.paidOut} value={`฿${fmt(clipper?.paid_amount ?? 0)}`} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
-                        <StatItem icon={<Video size={20} />} label={s.pendingBalance} value={`฿${fmt(clipper?.pending_balance ?? 0)}`} iconBg="bg-amber-100" iconColor="text-amber-600" />
+                        <StatItem icon={<Eye size={20} />} label={s.totalViews} value={fmtViews(clipperData?.total_views ?? 0)} iconBg="bg-blue-100" iconColor="text-blue-600" />
+                        <StatItem icon={<BadgeDollarSign size={20} />} label={s.totalEarned} value={`฿${fmt(clipperData?.total_earnings ?? 0)}`} iconBg="bg-violet-100" iconColor="text-violet-600" />
+                        <StatItem icon={<CheckCircle2 size={20} />} label={s.paidOut} value={`฿${fmt(clipperData?.paid_amount ?? 0)}`} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
+                        <StatItem icon={<Video size={20} />} label={s.pendingBalance} value={`฿${fmt(clipperData?.pending_balance ?? 0)}`} iconBg="bg-amber-100" iconColor="text-amber-600" />
                     </div>
                 </div>
             )}

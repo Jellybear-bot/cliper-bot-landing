@@ -6,6 +6,7 @@ import { Megaphone, ExternalLink, Send, CheckCircle2, AlertCircle, Link as LinkI
 import { useLanguage } from "@/context/LanguageContext";
 import { useCampaigns, useSubmissions } from "@/lib/portalApi";
 import type { CampaignResponse, SubmissionResponse } from "@/lib/portalApi";
+import { FORCE_PORTAL_MOCK_MODE, MOCK_CAMPAIGNS, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -54,12 +55,19 @@ export function CampaignsPage() {
     const c = a.campaigns;
 
     const { data: campaigns, loading, error } = useCampaigns();
-    const { data: mySubmissions } = useSubmissions();
+    const { data: mySubmissions, loading: submissionsLoading, error: submissionsError } = useSubmissions();
 
-    const activeCampaigns = campaigns?.filter((c) => c.status.includes("🟢")) ?? [];
-    const completedCampaigns = campaigns?.filter((c) => c.status.includes("🔴")) ?? [];
+    const shouldMockCampaigns = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
+    const shouldMockSubmissions = FORCE_PORTAL_MOCK_MODE || (Boolean(submissionsError) && !submissionsLoading);
+    const isMockMode = shouldMockCampaigns || shouldMockSubmissions;
 
-    const joinedCampaignNames = new Set(mySubmissions?.map((s) => s.campaign_name) ?? []);
+    const campaignsData = shouldMockCampaigns ? MOCK_CAMPAIGNS : (campaigns ?? []);
+    const submissionsData = shouldMockSubmissions ? MOCK_SUBMISSIONS : (mySubmissions ?? []);
+
+    const activeCampaigns = campaignsData.filter((c) => c.status.includes("🟢"));
+    const completedCampaigns = campaignsData.filter((c) => c.status.includes("🔴"));
+
+    const joinedCampaignNames = new Set(submissionsData.map((s) => s.campaign_name));
 
     return (
         <div className="space-y-8 pb-12 w-full">
@@ -81,10 +89,14 @@ export function CampaignsPage() {
                 </div>
             </div>
 
-            {/* Error */}
-            {error && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium px-4 py-3 rounded-xl">
-                    ⚠️ โหลดแคมเปญไม่ได้: {error}
+            {/* Mockup Banner */}
+            {isMockMode && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                    {FORCE_PORTAL_MOCK_MODE
+                        ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                    {error && <span className="block text-xs mt-1">campaigns: {error}</span>}
+                    {submissionsError && <span className="block text-xs">submissions: {submissionsError}</span>}
                 </div>
             )}
 
@@ -92,10 +104,10 @@ export function CampaignsPage() {
             <div>
                 <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    {c.activeCampaigns} {!loading && `(${activeCampaigns.length})`}
+                    {c.activeCampaigns} {(!loading || shouldMockCampaigns) && `(${activeCampaigns.length})`}
                 </h2>
                 <div className="space-y-4">
-                    {loading ? (
+                    {loading && !shouldMockCampaigns ? (
                         Array.from({ length: 2 }).map((_, i) => <CampaignSkeleton key={i} />)
                     ) : activeCampaigns.length === 0 ? (
                         <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl">
@@ -108,7 +120,7 @@ export function CampaignsPage() {
                                 key={campaign.id}
                                 campaign={campaign}
                                 isJoined={joinedCampaignNames.has(campaign.campaign_name)}
-                                mySubmissions={(mySubmissions ?? []).filter((s) => s.campaign_name === campaign.campaign_name)}
+                                mySubmissions={submissionsData.filter((s) => s.campaign_name === campaign.campaign_name)}
                             />
                         ))
                     )}
@@ -158,6 +170,8 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
     const budgetRemaining = campaign.total_budget - campaign.budget_spent;
     const budgetProgress = Math.round((campaign.budget_spent / campaign.total_budget) * 100);
     const viewProgress = Math.round((campaign.total_views_generated / campaign.view_target) * 100);
+    const isViewsGrowing = campaign.total_views_generated > 0;
+    const isBudgetDepleted = budgetRemaining <= 0;
 
     function getSubStatusLabel(status: string) {
         if (status.includes("🟢 Active")) return a.status.activeEarning;
@@ -213,12 +227,12 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
                             <Target size={14} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">{c.budgetLeft}</span>
                         </div>
-                        <p className="text-xl font-extrabold text-emerald-600">฿{fmt(budgetRemaining)}</p>
+                        <p className={`text-xl font-extrabold ${isBudgetDepleted ? "text-rose-600" : "text-emerald-600"}`}>฿{fmt(budgetRemaining)}</p>
                         <p className="text-[10px] text-slate-400 font-medium">of ฿{fmt(campaign.total_budget)}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
                         <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
-                            <TrendingUp size={14} />
+                            <TrendingUp size={14} className={isViewsGrowing ? "text-emerald-500" : "text-slate-400"} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">{c.views}</span>
                         </div>
                         <p className="text-xl font-extrabold text-slate-900">{fmtViews(campaign.total_views_generated)}</p>
@@ -312,7 +326,15 @@ function CampaignCard({ campaign, isJoined, mySubmissions }: {
                             {mySubmissions.map((sub) => (
                                 <div key={sub.id} className="flex items-center gap-4 px-6 py-3 border-t border-slate-100 hover:bg-slate-50/50 transition-colors">
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-slate-600 truncate">{sub.video_url.replace("https://", "")}</p>
+                                        <a
+                                            href={sub.video_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-2 truncate"
+                                        >
+                                            <span className="truncate">{sub.video_url.replace("https://", "")}</span>
+                                            <ExternalLink size={12} className="shrink-0" />
+                                        </a>
                                         <p className="text-[11px] text-slate-400 mt-0.5">{fmtViews(sub.play_count)} {a.campaigns.views}</p>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">

@@ -6,6 +6,7 @@ import { Wallet, CheckCircle2, AlertCircle, Clock, Building2, ArrowDownToLine, I
 import { useLanguage } from "@/context/LanguageContext";
 import { useMe, usePayouts } from "@/lib/portalApi";
 import type { PayoutResponse } from "@/lib/portalApi";
+import { FORCE_PORTAL_MOCK_MODE, MOCK_CLIPPER, MOCK_PAYOUTS } from "@/modules/app-portal/mockData";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,17 +42,24 @@ export function WithdrawPage() {
     const w = a.withdraw;
 
     const { data: clipper, loading: meLoading, error: meError } = useMe();
-    const { data: payouts, loading: payoutsLoading, refetch } = usePayouts();
+    const { data: payouts, loading: payoutsLoading, error: payoutsError, refetch } = usePayouts();
+
+    const shouldMockMe = FORCE_PORTAL_MOCK_MODE || (Boolean(meError) && !meLoading);
+    const shouldMockPayouts = FORCE_PORTAL_MOCK_MODE || (Boolean(payoutsError) && !payoutsLoading);
+    const isMockMode = shouldMockMe || shouldMockPayouts;
+
+    const clipperData = shouldMockMe ? MOCK_CLIPPER : (clipper ?? null);
+    const payoutData = shouldMockPayouts ? MOCK_PAYOUTS : (payouts ?? []);
 
     const [amount, setAmount] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
-    const pendingBalance = clipper?.pending_balance ?? 0;
+    const pendingBalance = clipperData?.pending_balance ?? 0;
     const parsedAmount = parseInt(amount, 10);
     const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= 100 && parsedAmount % 100 === 0 && parsedAmount <= pendingBalance;
 
-    const hasPendingRequest = (payouts ?? []).some((p: PayoutResponse) => p.status.includes("⏳"));
+    const hasPendingRequest = payoutData.some((p: PayoutResponse) => p.status.includes("⏳"));
 
     function getPayoutStatusLabel(status: string) {
         if (status.includes("✅")) return a.status.paid;
@@ -71,8 +79,8 @@ export function WithdrawPage() {
             type: "ok",
             text: w.validation.ok
                 .replace("{amount}", fmt(parsedAmount))
-                .replace("{bank}", clipper?.bank_type ?? "")
-                .replace("{no}", clipper?.bank_no ?? ""),
+                .replace("{bank}", clipperData?.bank_type ?? "")
+                .replace("{no}", clipperData?.bank_no ?? ""),
         };
     };
 
@@ -98,9 +106,13 @@ export function WithdrawPage() {
                 <p className="text-slate-500 text-sm font-medium">{w.subtitle}</p>
             </div>
 
-            {meError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium px-4 py-3 rounded-xl">
-                    ⚠️ โหลดข้อมูลไม่ได้: {meError}
+            {isMockMode && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                    {FORCE_PORTAL_MOCK_MODE
+                        ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                    {meError && <span className="block text-xs mt-1">me: {meError}</span>}
+                    {payoutsError && <span className="block text-xs">payouts: {payoutsError}</span>}
                 </div>
             )}
 
@@ -108,7 +120,7 @@ export function WithdrawPage() {
                 {/* Left */}
                 <div className="xl:col-span-2 space-y-5">
                     {/* Balance Card */}
-                    {meLoading ? <BalanceSkeleton /> : (
+                    {meLoading && !shouldMockMe ? <BalanceSkeleton /> : (
                         <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-7 text-white shadow-lg">
                             <p className="text-sm font-semibold text-blue-200 mb-1">{w.availableBalance}</p>
                             <p className="text-5xl font-extrabold mb-1">฿{fmt(pendingBalance)}</p>
@@ -116,11 +128,11 @@ export function WithdrawPage() {
                             <div className="mt-5 pt-5 border-t border-white/20 flex items-center gap-6 text-sm">
                                 <div>
                                     <p className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-0.5">{w.totalEarned}</p>
-                                    <p className="font-bold text-white">฿{fmt(clipper?.total_earnings ?? 0)}</p>
+                                    <p className="font-bold text-white">฿{fmt(clipperData?.total_earnings ?? 0)}</p>
                                 </div>
                                 <div>
                                     <p className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-0.5">{w.totalPaidOut}</p>
-                                    <p className="font-bold text-white">฿{fmt(clipper?.paid_amount ?? 0)}</p>
+                                    <p className="font-bold text-white">฿{fmt(clipperData?.paid_amount ?? 0)}</p>
                                 </div>
                             </div>
                         </div>
@@ -185,16 +197,16 @@ export function WithdrawPage() {
                             </div>
 
                             {/* Bank Info */}
-                            {!meLoading && clipper && (
+                            {(!meLoading || shouldMockMe) && clipperData && (
                                 <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
                                     <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
                                         <Building2 size={18} className="text-slate-500" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-700">{clipper.bank_type || "ยังไม่มีบัญชีธนาคาร"}</p>
-                                        <p className="text-xs text-slate-400 font-medium">{clipper.bank_no || "-"}</p>
+                                        <p className="text-sm font-bold text-slate-700">{clipperData.bank_type || "ยังไม่มีบัญชีธนาคาร"}</p>
+                                        <p className="text-xs text-slate-400 font-medium">{clipperData.bank_no || "-"}</p>
                                     </div>
-                                    {clipper.bank_no && (
+                                    {clipperData.bank_no && (
                                         <div className="ml-auto">
                                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">{w.verified}</span>
                                         </div>
@@ -203,7 +215,7 @@ export function WithdrawPage() {
                             )}
 
                             <button type="submit"
-                                disabled={!isValidAmount || submitting || hasPendingRequest || meLoading || !clipper?.bank_no}
+                                disabled={!isValidAmount || submitting || hasPendingRequest || (meLoading && !shouldMockMe) || !clipperData?.bank_no}
                                 className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
                                 <Wallet size={18} />
                                 {submitting ? w.processing : w.requestWithdrawal}
@@ -244,7 +256,7 @@ export function WithdrawPage() {
                             <h3 className="font-bold text-slate-800 text-sm">{w.history}</h3>
                         </div>
                         <div className="divide-y divide-slate-100">
-                            {payoutsLoading ? (
+                            {payoutsLoading && !shouldMockPayouts ? (
                                 Array.from({ length: 3 }).map((_, i) => (
                                     <div key={i} className="flex items-center gap-3 px-5 py-3.5 animate-pulse">
                                         <div className="flex-1 space-y-1.5">
@@ -254,10 +266,10 @@ export function WithdrawPage() {
                                         <div className="h-5 bg-slate-200 rounded w-16" />
                                     </div>
                                 ))
-                            ) : (payouts ?? []).length === 0 ? (
+                            ) : payoutData.length === 0 ? (
                                 <p className="text-center text-slate-400 text-sm py-8">{w.noPayouts}</p>
                             ) : (
-                                (payouts ?? []).map((p: PayoutResponse) => {
+                                payoutData.map((p: PayoutResponse) => {
                                     const { badge, icon } = getPayoutStatusStyle(p.status);
                                     return (
                                         <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors">

@@ -5,6 +5,7 @@ import { Wallet, Eye, TrendingUp, BadgeDollarSign, ChevronRight, Video, Megaphon
 import { useLanguage } from "@/context/LanguageContext";
 import { useMe, useSubmissions } from "@/lib/portalApi";
 import type { SubmissionResponse } from "@/lib/portalApi";
+import { FORCE_PORTAL_MOCK_MODE, MOCK_CLIPPER, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,7 +61,11 @@ export function DashboardPage() {
     const d = a.dashboard;
 
     const { data: clipper, loading: meLoading, error: meError } = useMe();
-    const { data: submissions, loading: subLoading } = useSubmissions();
+    const { data: submissions, loading: subLoading, error: subError } = useSubmissions();
+
+    const isMockMode = FORCE_PORTAL_MOCK_MODE || (Boolean(meError || subError) && !meLoading && !subLoading);
+    const clipperData = isMockMode ? MOCK_CLIPPER : (clipper ?? null);
+    const submissionData = isMockMode ? MOCK_SUBMISSIONS : (submissions ?? []);
 
     function getStatusLabel(status: string) {
         if (status.includes("🟢 Active")) return a.status.activeEarning;
@@ -70,7 +75,7 @@ export function DashboardPage() {
         return status;
     }
 
-    const recentSubs = submissions?.slice(0, 3) ?? [];
+    const recentSubs = submissionData.slice(0, 3);
 
     return (
         <div className="space-y-8 pb-12 w-full">
@@ -78,29 +83,33 @@ export function DashboardPage() {
             <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-slate-200 text-slate-600 font-medium text-xs mb-3">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    {d.welcomeBack} {clipper?.username ?? "..."}!
+                    {d.welcomeBack} {clipperData?.username ?? "..."}!
                 </div>
                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">{d.title}</h1>
                 <p className="text-slate-500 text-sm font-medium">{d.subtitle}</p>
             </div>
 
-            {/* Error Banner */}
-            {meError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium px-4 py-3 rounded-xl">
-                    ⚠️ ไม่สามารถเชื่อมต่อ backend ได้: {meError}
+            {/* Mockup Banner */}
+            {isMockMode && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                    {FORCE_PORTAL_MOCK_MODE
+                        ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                    {meError && <span className="block text-xs mt-1">me: {meError}</span>}
+                    {subError && <span className="block text-xs">submissions: {subError}</span>}
                 </div>
             )}
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-                {meLoading ? (
+                {meLoading && !isMockMode ? (
                     Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
                 ) : (
                     <>
-                        <StatCard label={d.stats.pendingBalance} value={fmtCurrency(clipper?.pending_balance ?? 0)} sub={d.stats.pendingBalanceSub} icon={<Wallet size={22} />} iconBg="bg-blue-600" highlight />
-                        <StatCard label={d.stats.totalEarnings} value={fmtCurrency(clipper?.total_earnings ?? 0)} sub={d.stats.totalEarningsSub} icon={<BadgeDollarSign size={22} />} iconBg="bg-violet-500" />
-                        <StatCard label={d.stats.totalViews} value={fmtViews(clipper?.total_views ?? 0)} sub={d.stats.totalViewsSub} icon={<Eye size={22} />} iconBg="bg-emerald-500" />
-                        <StatCard label={d.stats.paidOut} value={fmtCurrency(clipper?.paid_amount ?? 0)} sub={d.stats.paidOutSub} icon={<TrendingUp size={22} />} iconBg="bg-amber-500" />
+                        <StatCard label={d.stats.pendingBalance} value={fmtCurrency(clipperData?.pending_balance ?? 0)} sub={d.stats.pendingBalanceSub} icon={<Wallet size={22} />} iconBg="bg-blue-600" highlight />
+                        <StatCard label={d.stats.totalEarnings} value={fmtCurrency(clipperData?.total_earnings ?? 0)} sub={d.stats.totalEarningsSub} icon={<BadgeDollarSign size={22} />} iconBg="bg-violet-500" />
+                        <StatCard label={d.stats.totalViews} value={fmtViews(clipperData?.total_views ?? 0)} sub={d.stats.totalViewsSub} icon={<Eye size={22} />} iconBg="bg-emerald-500" />
+                        <StatCard label={d.stats.paidOut} value={fmtCurrency(clipperData?.paid_amount ?? 0)} sub={d.stats.paidOutSub} icon={<TrendingUp size={22} />} iconBg="bg-amber-500" />
                     </>
                 )}
             </div>
@@ -119,7 +128,7 @@ export function DashboardPage() {
                         </Link>
                     </div>
                     <div className="divide-y divide-slate-100">
-                        {subLoading ? (
+                        {subLoading && !isMockMode ? (
                             Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
                         ) : recentSubs.length === 0 ? (
                             <div className="text-center py-10 text-slate-400 text-sm">ยังไม่มีวิดีโอที่ส่ง</div>
@@ -154,10 +163,10 @@ export function DashboardPage() {
                 {/* Right Column */}
                 <div className="flex flex-col gap-4">
                     {/* Withdraw CTA */}
-                    {!meLoading && (clipper?.pending_balance ?? 0) >= 100 && (
+                    {!meLoading && (clipperData?.pending_balance ?? 0) >= 100 && (
                         <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-6 text-white shadow-lg">
                             <p className="text-sm font-semibold text-blue-200 mb-1">{d.readyToWithdraw}</p>
-                            <p className="text-3xl font-extrabold mb-4">{fmtCurrency(clipper!.pending_balance)}</p>
+                            <p className="text-3xl font-extrabold mb-4">{fmtCurrency(clipperData!.pending_balance)}</p>
                             <Link href="/app/withdraw" className="flex items-center justify-center gap-2 w-full bg-white text-blue-700 font-bold text-sm py-2.5 rounded-xl hover:bg-blue-50 transition-colors">
                                 <Wallet size={16} /> {d.requestWithdrawal}
                             </Link>
@@ -177,7 +186,7 @@ export function DashboardPage() {
                     </div>
 
                     {/* Earnings Summary */}
-                    {meLoading ? (
+                    {meLoading && !isMockMode ? (
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 animate-pulse space-y-3">
                             {Array.from({ length: 3 }).map((_, i) => (
                                 <div key={i} className="flex justify-between">
@@ -190,10 +199,10 @@ export function DashboardPage() {
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
                             <h3 className="font-bold text-slate-800 text-sm mb-4">{d.earningsBreakdown}</h3>
                             <div className="space-y-3">
-                                <EarningsRow label={d.totalEarned} value={fmtCurrency(clipper?.total_earnings ?? 0)} color="text-slate-700" />
-                                <EarningsRow label={d.withdrawn} value={fmtCurrency(clipper?.paid_amount ?? 0)} color="text-slate-500" />
+                                <EarningsRow label={d.totalEarned} value={fmtCurrency(clipperData?.total_earnings ?? 0)} color="text-slate-700" />
+                                <EarningsRow label={d.withdrawn} value={fmtCurrency(clipperData?.paid_amount ?? 0)} color="text-slate-500" />
                                 <div className="border-t border-slate-100 pt-3">
-                                    <EarningsRow label={d.pendingBalance} value={fmtCurrency(clipper?.pending_balance ?? 0)} color="text-blue-600 font-bold" />
+                                    <EarningsRow label={d.pendingBalance} value={fmtCurrency(clipperData?.pending_balance ?? 0)} color="text-blue-600 font-bold" />
                                 </div>
                             </div>
                         </div>
