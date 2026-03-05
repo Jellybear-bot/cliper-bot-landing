@@ -4,7 +4,7 @@ import { ReactNode, useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Settings, LogOut, Search, Bell, Menu, X,
-    Megaphone, Video, Wallet, CheckCheck
+    Megaphone, Video, Wallet, CheckCheck, BarChart3
 } from "lucide-react";
 import { mockLogout } from "@/modules/app-portal/services/auth/actions";
 import { useLanguage } from "@/context/LanguageContext";
@@ -116,6 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     const NAV_ITEMS = [
         { href: '/app', icon: <LayoutDashboard size={20} />, label: a.nav.overview },
         { href: '/app/campaigns', icon: <Megaphone size={20} />, label: a.nav.campaigns },
+        { href: '/app/earnings', icon: <BarChart3 size={20} />, label: a.nav.earnings },
         { href: '/app/submissions', icon: <Video size={20} />, label: a.nav.submissions },
         { href: '/app/withdraw', icon: <Wallet size={20} />, label: a.nav.withdraw },
         { href: '/app/settings', icon: <Settings size={20} />, label: a.nav.settings },
