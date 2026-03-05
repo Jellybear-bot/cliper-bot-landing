@@ -5,6 +5,7 @@ import SocialProof from '@/components/SocialProof';
 import ProblemSolution from '@/components/ProblemSolution';
 import HowItWorks from '@/components/HowItWorks';
 import Pricing from '@/components/Pricing';
+import BrandInquirySection from '@/components/BrandInquirySection';
 import FAQ from '@/components/FAQ';
 import FinalCTA from '@/components/FinalCTA';
 import Footer from '@/components/Footer';
@@ -20,6 +21,7 @@ export default function Home() {
                 <ProblemSolution />
                 <HowItWorks />
                 <Pricing />
+                <BrandInquirySection />
                 <FAQ />
                 <FinalCTA />
             </main>

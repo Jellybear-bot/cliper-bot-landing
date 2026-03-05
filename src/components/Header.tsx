@@ -20,7 +20,8 @@ export default function Header() {
                 <nav className="hidden md:flex items-center gap-8">
                     <a href="#services" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.services}</a>
                     <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.pricing}</a>
-                    <a href="#creators" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.creators}</a>
+                    <a href="#brands" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.brands}</a>
+                    <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.creators}</Link>
                 </nav>
 
                 <div className="hidden md:flex items-center gap-4">
@@ -42,9 +43,9 @@ export default function Header() {
                     <Link href="/login" className="px-6 py-2.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-sm font-semibold hover:bg-indigo-100 transition-colors">
                         Login
                     </Link>
-                    <button className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm">
+                    <a href="https://discord.gg/9WE9sGyZ" target="_blank" rel="noopener noreferrer" className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm">
                         {t.header.bookDemo}
-                    </button>
+                    </a>
                 </div>
 
                 <button className="md:hidden text-slate-900" onClick={() => setIsOpen(!isOpen)}>
@@ -72,13 +73,14 @@ export default function Header() {
                     </div>
                     <a href="#services" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.services}</a>
                     <a href="#pricing" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.pricing}</a>
-                    <a href="#creators" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.creators}</a>
+                    <a href="#brands" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.brands}</a>
+                    <Link href="/login" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.creators}</Link>
                     <Link href="/login" onClick={() => setIsOpen(false)} className="w-full mt-4 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-center hover:bg-indigo-100 transition-colors">
                         Login
                     </Link>
-                    <button className="w-full mt-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-semibold shadow-sm">
+                    <a href="https://discord.gg/9WE9sGyZ" target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="w-full mt-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-semibold shadow-sm text-center">
                         {t.header.bookDemo}
-                    </button>
+                    </a>
                 </div>
             )}
         </header>

@@ -2,8 +2,9 @@ export const en = {
     header: {
         services: "Services",
         pricing: "Pricing",
+        brands: "For Brands",
         creators: "For Creators",
-        bookDemo: "Book a Demo"
+        bookDemo: "Contact Us"
     },
     hero: {
         badge: "Guaranteed Results for B2B & Creators",
@@ -93,6 +94,48 @@ export const en = {
                 ]
             }
         }
+    },
+    brandInquiry: {
+        badge: "For Brands Looking To Hire",
+        title: "Tell Us About Your Campaign Needs",
+        subtitle: "Share a few details and our team will propose a suitable campaign plan quickly.",
+        points: {
+            point1: "Get budget and goal recommendations tailored to your brand",
+            point2: "Estimate campaign duration and content volume",
+            point3: "Receive a response from our team within 24 hours",
+        },
+        fields: {
+            firstName: "First Name",
+            lastName: "Last Name",
+            companyName: "Company Name",
+            brandName: "Brand Name",
+            email: "Email",
+            phone: "Phone",
+            goal: "Goal",
+            budget: "Budget",
+            timeline: "Preferred Timeline",
+            details: "Additional Details",
+            detailsPlaceholder: "e.g. product category, target audience, preferred platforms",
+        },
+        options: {
+            goal: {
+                brandAwareness: "Brand Awareness",
+                sales: "Drive Sales",
+                launch: "New Product Launch",
+            },
+            budget: {
+                under50k: "Under 50,000 THB",
+                b50to100k: "50,000 - 100,000 THB",
+                over100k: "Over 100,000 THB",
+            },
+            timeline: {
+                thisWeek: "This Week",
+                thisMonth: "This Month",
+                nextMonth: "Next Month",
+            },
+        },
+        submit: "Submit Inquiry",
+        success: "Thanks. We received your details and will contact you shortly.",
     },
     faq: {
         title: "Frequently Asked Questions",
