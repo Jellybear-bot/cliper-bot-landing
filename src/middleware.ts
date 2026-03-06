@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
 
     if (pathname === "/app" || pathname === "/app/") {
         const target = request.cookies.get("mock_session")?.value
-            ? "/app/campaigns"
+            ? "/app/overview"
             : "/login";
 
         return NextResponse.redirect(new URL(target, request.url));

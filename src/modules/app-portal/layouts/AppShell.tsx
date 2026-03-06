@@ -114,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
 
     const NAV_ITEMS = [
-        { href: '/app', icon: <LayoutDashboard size={20} />, label: a.nav.overview },
+        { href: '/app/overview', icon: <LayoutDashboard size={20} />, label: a.nav.overview },
         { href: '/app/campaigns', icon: <Megaphone size={20} />, label: a.nav.campaigns },
         { href: '/app/earnings', icon: <BarChart3 size={20} />, label: a.nav.earnings },
         { href: '/app/submissions', icon: <Video size={20} />, label: a.nav.submissions },

@@ -21,7 +21,7 @@ export async function mockLogin() {
         maxAge: 60 * 60 * 24 * 7, // 1 week
     });
 
-    redirect("/app");
+    redirect("/app/overview");
 }
 
 export async function mockLogout() {
