@@ -172,6 +172,7 @@ export const th = {
         forCreators: "สำหรับครีเอเตอร์",
         contact: "ติดต่อเรา",
         legalLinks: "กฏหมาย",
+        legal: "ข้อมูลกฏหมาย",
         terms: "เงื่อนไขการให้บริการ",
         privacy: "นโยบายความเป็นส่วนตัว",
         cookie: "นโยบายคุกกี้",

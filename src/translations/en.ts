@@ -172,6 +172,7 @@ export const en = {
         forCreators: "For Creators",
         contact: "Contact",
         legalLinks: "Legal",
+        legal: "Legal Information",
         terms: "Terms of Service",
         privacy: "Privacy Policy",
         cookie: "Cookie Policy",

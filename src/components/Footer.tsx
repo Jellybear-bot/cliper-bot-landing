@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Footer() {
@@ -36,9 +37,10 @@ export default function Footer() {
                     <div>
                         <h4 className="font-bold text-slate-900 mb-6">{t.footer.legalLinks}</h4>
                         <ul className="space-y-4 text-sm text-slate-500 font-medium">
-                            <li><a href="#" className="hover:text-slate-900 transition-colors">{t.footer.terms}</a></li>
-                            <li><a href="#" className="hover:text-slate-900 transition-colors">{t.footer.privacy}</a></li>
-                            <li><a href="#" className="hover:text-slate-900 transition-colors">{t.footer.cookie}</a></li>
+                            <li><Link href="/legal" className="hover:text-slate-900 transition-colors">{t.footer.legal}</Link></li>
+                            <li><Link href="/legal/terms" className="hover:text-slate-900 transition-colors">{t.footer.terms}</Link></li>
+                            <li><Link href="/legal/privacy" className="hover:text-slate-900 transition-colors">{t.footer.privacy}</Link></li>
+                            <li><Link href="/legal/cookies" className="hover:text-slate-900 transition-colors">{t.footer.cookie}</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -46,9 +48,9 @@ export default function Footer() {
                 <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400 font-medium">
                     <p>{t.footer.rights.replace('{year}', year.toString())}</p>
                     <div className="flex gap-4">
-                        <a href="#" className="hover:text-slate-600 transition-colors">TikTok</a>
-                        <a href="#" className="hover:text-slate-600 transition-colors">Instagram</a>
-                        <a href="#" className="hover:text-slate-600 transition-colors">YouTube</a>
+                        <a href="mailto:hello@crowdclip.media" className="hover:text-slate-600 transition-colors">Email</a>
+                        <a href="https://line.me/ti/p/~crowdclip" target="_blank" rel="noopener noreferrer" className="hover:text-slate-600 transition-colors">Line</a>
+                        <a href="https://discord.gg/9WE9sGyZ" target="_blank" rel="noopener noreferrer" className="hover:text-slate-600 transition-colors">Discord</a>
                     </div>
                 </div>
             </div>
