@@ -1,5 +1,6 @@
 import { mockLogin } from "@/modules/app-portal/services/auth/actions";
-import { LogIn } from "lucide-react";
+import { LogIn, ShieldCheck } from "lucide-react";
+import { DiscordLoginButton } from "@/app/login/DiscordLoginButton";
 
 export default function LoginPage() {
     return (
@@ -20,20 +21,25 @@ export default function LoginPage() {
                         <p className="text-zinc-400 text-sm">Sign in to access your Creator Portal.</p>
                     </div>
 
-                    <form action={mockLogin} className="relative z-10">
-                        <button
-                            type="submit"
-                            className="w-full relative overflow-hidden group/btn flex items-center justify-center gap-3 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-[#5865F2]/20"
-                        >
-                            <LogIn size={20} className="group-hover/btn:-translate-y-1 transition-transform" />
-                            <span>Developer Sign In</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
-                        </button>
-                    </form>
+                    <div className="relative z-10 space-y-3">
+                        <DiscordLoginButton />
 
-                    <div className="mt-8 text-center text-xs text-zinc-500 font-medium relative z-10">
-                        <p>This signs in with the local development session flow.</p>
-                        <p className="mt-1">Real Discord OAuth still needs backend/auth provider integration.</p>
+                        <form action={mockLogin}>
+                            <button
+                                type="submit"
+                                className="w-full relative overflow-hidden group/btn flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-zinc-100 font-semibold py-4 px-6 rounded-xl transition-all duration-300 border border-white/10"
+                            >
+                                <ShieldCheck size={20} className="group-hover/btn:-translate-y-1 transition-transform" />
+                                <span>Bypass Sign In</span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="mt-8 text-center text-xs text-zinc-500 font-medium relative z-10 space-y-1">
+                        <p>Choose one of two sign-in methods.</p>
+                        <p>Discord login creates a real portal session from your Discord account.</p>
+                        <p>Bypass login creates a local development session immediately.</p>
                     </div>
                 </div>
             </div>
