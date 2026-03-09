@@ -20,7 +20,14 @@ const fmtViews = (n: number) => {
     if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
     return fmt(n);
 };
-const fmtDate = (value: string) => new Date(value).toLocaleDateString("th-TH", { day: "2-digit", month: "long", year: "numeric" });
+const fmtDate = (value?: string) => {
+    if (!value) return "-";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+
+    return date.toLocaleDateString("th-TH", { day: "2-digit", month: "long", year: "numeric" });
+};
 
 function ProfileSkeleton() {
     return (

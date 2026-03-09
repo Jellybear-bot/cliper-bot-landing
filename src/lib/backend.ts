@@ -11,6 +11,12 @@ const authHeaders = {
     "x-api-key": API_KEY,
 };
 
+async function buildFetchError(label: string, res: Response) {
+    const body = await res.json().catch(() => null) as { error?: string; message?: string } | null;
+    const message = body?.error ?? body?.message ?? `${label}: ${res.status}`;
+    return new Error(message);
+}
+
 export interface BackendMutationResult<T = unknown> {
     configured: boolean;
     ok: boolean;
@@ -69,14 +75,14 @@ export interface ClipperResponse {
     discord_id: string;
     username: string;
     payment_info: string;
-    bank_no: string;
-    bank_type: string;
+    bank_no?: string;
+    bank_type?: string;
     pending_balance: number;
     paid_amount: number;
     total_earnings: number;
     total_views: number;
     status: string;
-    created_at: string;
+    created_at?: string;
 }
 
 export async function fetchClippers(): Promise<ClipperResponse[]> {
@@ -84,7 +90,7 @@ export async function fetchClippers(): Promise<ClipperResponse[]> {
         headers: authHeaders,
         cache: "no-store",
     });
-    if (!res.ok) throw new Error(`fetchClippers: ${res.status}`);
+    if (!res.ok) throw await buildFetchError("fetchClippers", res);
     return res.json();
 }
 
@@ -111,9 +117,10 @@ export interface CampaignResponse {
 
 export async function fetchCampaigns(): Promise<CampaignResponse[]> {
     const res = await fetch(`${BACKEND_URL}/api/campaigns`, {
+        headers: authHeaders,
         cache: "no-store",
     });
-    if (!res.ok) throw new Error(`fetchCampaigns: ${res.status}`);
+    if (!res.ok) throw await buildFetchError("fetchCampaigns", res);
     return res.json();
 }
 
@@ -139,7 +146,7 @@ export async function fetchSubmissions(): Promise<SubmissionResponse[]> {
         headers: authHeaders,
         cache: "no-store",
     });
-    if (!res.ok) throw new Error(`fetchSubmissions: ${res.status}`);
+    if (!res.ok) throw await buildFetchError("fetchSubmissions", res);
     return res.json();
 }
 
@@ -163,12 +170,29 @@ export interface PayoutResponse {
 }
 
 export async function fetchPayoutsByClipper(discordId: string): Promise<PayoutResponse[]> {
-    // This endpoint is public when clipper_id is provided
     const res = await fetch(`${BACKEND_URL}/api/payouts?clipper_id=${discordId}`, {
+        headers: authHeaders,
         cache: "no-store",
     });
-    if (!res.ok) throw new Error(`fetchPayoutsByClipper: ${res.status}`);
+    if (!res.ok) throw await buildFetchError("fetchPayoutsByClipper", res);
     return res.json();
+}
+
+export function mergeClipperWithPayoutHistory(
+    clipper: ClipperResponse | null,
+    payouts: PayoutResponse[],
+): ClipperResponse | null {
+    if (!clipper) return null;
+    if (clipper.bank_no && clipper.bank_type) return clipper;
+
+    const latestBank = payouts.find((payout) => payout.bank_no && payout.bank_type);
+    if (!latestBank) return clipper;
+
+    return {
+        ...clipper,
+        bank_no: clipper.bank_no ?? latestBank.bank_no,
+        bank_type: clipper.bank_type ?? latestBank.bank_type,
+    };
 }
 
 export async function createSubmission(input: {

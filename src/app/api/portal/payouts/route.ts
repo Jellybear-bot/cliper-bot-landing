@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createPayoutRequest, fetchClipperById, fetchPayoutsByClipper } from "@/lib/backend";
+import { createPayoutRequest, fetchClipperById, fetchPayoutsByClipper, mergeClipperWithPayoutHistory } from "@/lib/backend";
 import { getSessionUser } from "@/lib/session";
 import { getRoleFromClipper, ROLE_PERMISSIONS } from "@/modules/app-portal/roleConfig";
 
@@ -32,10 +32,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "amount must be a positive number" }, { status: 400 });
         }
 
-        const [clipper, payouts] = await Promise.all([
+        const [rawClipper, payouts] = await Promise.all([
             fetchClipperById(user.discord_id),
             fetchPayoutsByClipper(user.discord_id),
         ]);
+
+        const clipper = mergeClipperWithPayoutHistory(rawClipper, payouts);
 
         if (!clipper) {
             return NextResponse.json({ error: "clipper not found" }, { status: 404 });
