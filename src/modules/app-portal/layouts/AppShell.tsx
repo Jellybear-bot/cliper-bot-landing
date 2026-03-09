@@ -238,12 +238,21 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
 
     const NAV_ITEMS = [
+<<<<<<< HEAD
         { href: "/app", icon: <LayoutDashboard size={20} />, label: a.nav.overview },
         { href: "/app/campaigns", icon: <Megaphone size={20} />, label: a.nav.campaigns },
         { href: "/app/earnings", icon: <BarChart3 size={20} />, label: a.nav.earnings },
         { href: "/app/submissions", icon: <Video size={20} />, label: a.nav.submissions },
         { href: "/app/withdraw", icon: <Wallet size={20} />, label: a.nav.withdraw },
         { href: "/app/settings", icon: <Settings size={20} />, label: a.nav.settings },
+=======
+        { href: '/app/overview', icon: <LayoutDashboard size={20} />, label: a.nav.overview },
+        { href: '/app/campaigns', icon: <Megaphone size={20} />, label: a.nav.campaigns },
+        { href: '/app/earnings', icon: <BarChart3 size={20} />, label: a.nav.earnings },
+        { href: '/app/submissions', icon: <Video size={20} />, label: a.nav.submissions },
+        { href: '/app/withdraw', icon: <Wallet size={20} />, label: a.nav.withdraw },
+        { href: '/app/settings', icon: <Settings size={20} />, label: a.nav.settings },
+>>>>>>> 9ba872192daa73fac8ebe732fb6cd2ac3ca33c3e
     ];
 
     const profileName = clipperData?.username ?? "Portal User";

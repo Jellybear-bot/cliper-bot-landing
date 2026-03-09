@@ -23,7 +23,7 @@ export async function mockLogin() {
     });
     cookies().delete(LEGACY_PORTAL_SESSION_COOKIE);
 
-    redirect("/app");
+    redirect("/app/overview");
 }
 
 export async function mockLogout() {
