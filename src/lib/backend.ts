@@ -11,6 +11,58 @@ const authHeaders = {
     "x-api-key": API_KEY,
 };
 
+export interface BackendMutationResult<T = unknown> {
+    configured: boolean;
+    ok: boolean;
+    status: number;
+    data: T | null;
+    error: string | null;
+}
+
+async function proxyConfiguredMutation<T>(
+    url: string | undefined,
+    method: "POST" | "PATCH" | "PUT",
+    body: unknown,
+    useAuth = true,
+): Promise<BackendMutationResult<T>> {
+    if (!url) {
+        return {
+            configured: false,
+            ok: false,
+            status: 501,
+            data: null,
+            error: "Frontend route is ready, but the backend write endpoint is not configured yet.",
+        };
+    }
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: useAuth ? authHeaders : { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            cache: "no-store",
+        });
+
+        const data = await res.json().catch(() => null);
+
+        return {
+            configured: true,
+            ok: res.ok,
+            status: res.status,
+            data,
+            error: res.ok ? null : (data as { error?: string } | null)?.error ?? `Request failed with HTTP ${res.status}`,
+        };
+    } catch (error) {
+        return {
+            configured: true,
+            ok: false,
+            status: 503,
+            data: null,
+            error: error instanceof Error ? error.message : "Backend unavailable",
+        };
+    }
+}
+
 // ─── Clipper ──────────────────────────────────────────────────────────────────
 
 export interface ClipperResponse {
@@ -117,4 +169,62 @@ export async function fetchPayoutsByClipper(discordId: string): Promise<PayoutRe
     });
     if (!res.ok) throw new Error(`fetchPayoutsByClipper: ${res.status}`);
     return res.json();
+}
+
+export async function createSubmission(input: {
+    discord_id: string;
+    campaign_id: string;
+    campaign_name: string;
+    video_url: string;
+}) {
+    return proxyConfiguredMutation(
+        process.env.PORTAL_SUBMISSION_WRITE_URL,
+        "POST",
+        input,
+    );
+}
+
+export async function updateClipperBank(input: {
+    discord_id: string;
+    bank_no: string;
+    bank_type: string;
+}) {
+    return proxyConfiguredMutation(
+        process.env.PORTAL_BANK_UPDATE_URL,
+        "PATCH",
+        input,
+    );
+}
+
+export async function createPayoutRequest(input: {
+    discord_id: string;
+    amount: number;
+    bank_no: string;
+    bank_type: string;
+}) {
+    return proxyConfiguredMutation(
+        process.env.PORTAL_PAYOUT_REQUEST_URL,
+        "POST",
+        input,
+    );
+}
+
+export async function submitBrandInquiry(input: {
+    firstName: string;
+    lastName: string;
+    companyName: string;
+    brandName: string;
+    email: string;
+    phone: string;
+    goal: string;
+    budget: string;
+    timeline: string;
+    details: string;
+}) {
+    return proxyConfiguredMutation(
+        process.env.BRAND_INQUIRY_FORWARD_URL,
+        "POST",
+        input,
+        false,
+    );
 }

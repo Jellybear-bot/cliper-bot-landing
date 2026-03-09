@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { BarChart3, CalendarClock, Eye, Coins } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useSubmissions } from "@/lib/portalApi";
 import type { SubmissionResponse } from "@/lib/portalApi";
-import { FORCE_PORTAL_MOCK_MODE, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
+import { MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
 
 const fmt = (n: number) => new Intl.NumberFormat("th-TH").format(n);
 const fmtCurrency = (n: number) => `฿${fmt(n)}`;
@@ -29,10 +31,12 @@ interface CampaignSummary {
 
 export function EarningsPage() {
     const { t } = useLanguage();
+    const searchParams = useSearchParams();
     const e = t.app.earnings;
+    const searchQuery = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
     const { data: submissions, loading, error } = useSubmissions();
-    const shouldMock = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
+    const shouldMock = shouldUsePortalMockData(Boolean(error) && !loading);
     const list = shouldMock ? MOCK_SUBMISSIONS : (submissions ?? []);
 
     const campaigns = useMemo<CampaignSummary[]>(() => {
@@ -88,20 +92,24 @@ export function EarningsPage() {
         }).sort((a, b) => b.totalEarnings - a.totalEarnings);
     }, [list]);
 
+    const visibleCampaigns = searchQuery
+        ? campaigns.filter((campaign) => campaign.campaignName.toLowerCase().includes(searchQuery))
+        : campaigns;
+
     const [selectedCampaign, setSelectedCampaign] = useState("");
 
     useEffect(() => {
-        if (!campaigns.length) {
+        if (!visibleCampaigns.length) {
             setSelectedCampaign("");
             return;
         }
-        const exists = campaigns.some((x) => x.campaignName === selectedCampaign);
+        const exists = visibleCampaigns.some((campaign) => campaign.campaignName === selectedCampaign);
         if (!exists) {
-            setSelectedCampaign(campaigns[0].campaignName);
+            setSelectedCampaign(visibleCampaigns[0].campaignName);
         }
-    }, [campaigns, selectedCampaign]);
+    }, [visibleCampaigns, selectedCampaign]);
 
-    const activeCampaign = campaigns.find((x) => x.campaignName === selectedCampaign) ?? campaigns[0];
+    const activeCampaign = visibleCampaigns.find((campaign) => campaign.campaignName === selectedCampaign) ?? visibleCampaigns[0];
 
     return (
         <div className="space-y-7 pb-12 w-full">
@@ -113,8 +121,8 @@ export function EarningsPage() {
             {shouldMock && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
-                        ? "⚠ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
-                        : "⚠ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                        ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
                     {error && <span className="block text-xs mt-1">submissions: {error}</span>}
                 </div>
             )}
@@ -122,15 +130,15 @@ export function EarningsPage() {
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{e.selectCampaign}</p>
                 <div className="flex gap-2 flex-wrap">
-                    {campaigns.map((c) => (
+                    {visibleCampaigns.map((campaign) => (
                         <button
-                            key={c.campaignName}
-                            onClick={() => setSelectedCampaign(c.campaignName)}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${selectedCampaign === c.campaignName
+                            key={campaign.campaignName}
+                            onClick={() => setSelectedCampaign(campaign.campaignName)}
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${selectedCampaign === campaign.campaignName
                                 ? "bg-blue-600 text-white"
                                 : "bg-slate-50 border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600"}`}
                         >
-                            {c.campaignName}
+                            {campaign.campaignName}
                         </button>
                     ))}
                 </div>
@@ -139,7 +147,7 @@ export function EarningsPage() {
             {!activeCampaign ? (
                 <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
                     <BarChart3 size={40} className="text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-semibold">{e.noData}</p>
+                    <p className="text-slate-500 font-semibold">{searchQuery ? `No campaigns match "${searchQuery}"` : e.noData}</p>
                 </div>
             ) : (
                 <>

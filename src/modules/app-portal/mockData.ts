@@ -1,7 +1,5 @@
 import type { CampaignResponse, ClipperResponse, PayoutResponse, SubmissionResponse } from "@/lib/portalApi";
 
-export const FORCE_PORTAL_MOCK_MODE = process.env.NEXT_PUBLIC_PORTAL_MOCK_MODE === "true";
-
 export const MOCK_CLIPPER: ClipperResponse = {
     discord_id: "demo-000",
     username: "demo_clipper",

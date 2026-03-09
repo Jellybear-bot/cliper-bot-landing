@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { LEGACY_PORTAL_SESSION_COOKIE, PORTAL_SESSION_COOKIE } from '@/lib/auth-constants'
 import { AppShell } from '@/modules/app-portal/layouts/AppShell'
 
 export const metadata: Metadata = {
@@ -13,9 +14,8 @@ export default function AppLayout({
 }: {
     children: React.ReactNode
 }) {
-    // Check for the mock session cookie
     const cookieStore = cookies()
-    const session = cookieStore.get('mock_session')
+    const session = cookieStore.get(PORTAL_SESSION_COOKIE) ?? cookieStore.get(LEGACY_PORTAL_SESSION_COOKIE)
 
     if (!session?.value) {
         redirect('/login')

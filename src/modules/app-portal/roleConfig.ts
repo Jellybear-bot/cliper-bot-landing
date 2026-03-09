@@ -1,4 +1,5 @@
 import type { CampaignResponse, ClipperResponse } from "@/lib/portalApi";
+import { PORTAL_ROLE_OVERRIDE_ENABLED } from "@/lib/portalConfig";
 
 export type PortalRole = "member" | "vip";
 export const LOCAL_ROLE_OVERRIDE_KEY = "portal_role_override";
@@ -35,12 +36,14 @@ export function getRoleFromClipper(clipper: ClipperResponse | null): PortalRole 
 }
 
 export function getLocalRoleOverride(): PortalRole | null {
+    if (!PORTAL_ROLE_OVERRIDE_ENABLED) return null;
     if (typeof window === "undefined") return null;
     const value = window.localStorage.getItem(LOCAL_ROLE_OVERRIDE_KEY);
     return value === "member" || value === "vip" ? value : null;
 }
 
 export function setLocalRoleOverride(role: PortalRole | null) {
+    if (!PORTAL_ROLE_OVERRIDE_ENABLED) return;
     if (typeof window === "undefined") return;
     if (!role) {
         window.localStorage.removeItem(LOCAL_ROLE_OVERRIDE_KEY);

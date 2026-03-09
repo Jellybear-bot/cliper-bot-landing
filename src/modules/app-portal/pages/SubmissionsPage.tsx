@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Video, Eye, DollarSign, ThumbsUp, MessageCircle, Share2, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useSubmissions } from "@/lib/portalApi";
 import type { SubmissionResponse } from "@/lib/portalApi";
-import { FORCE_PORTAL_MOCK_MODE, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
 
 const fmt = (n: number) => new Intl.NumberFormat("th-TH").format(n);
 const fmtViews = (n: number) => {
@@ -23,8 +23,6 @@ function getStatusStyle(status: string) {
     if (status.includes("📉")) return "bg-blue-100 text-blue-700 border-blue-200";
     return "bg-slate-100 text-slate-600 border-slate-200";
 }
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function SkeletonRow() {
     return (
@@ -42,19 +40,19 @@ function SkeletonRow() {
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 type FilterKey = "all" | "active" | "pending" | "waiting" | "rejected";
 
 export function SubmissionsPage() {
     const { t } = useLanguage();
+    const searchParams = useSearchParams();
     const a = t.app;
     const s = a.submissions;
+    const searchQuery = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
     const { data: submissions, loading, error } = useSubmissions();
     const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
-    const shouldMockSubmissions = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
+    const shouldMockSubmissions = shouldUsePortalMockData(Boolean(error) && !loading);
     const list = shouldMockSubmissions ? MOCK_SUBMISSIONS : (submissions ?? []);
 
     function getStatusLabel(status: string) {
@@ -81,10 +79,13 @@ export function SubmissionsPage() {
         { key: "rejected", label: s.filterRejected, match: (sub) => sub.status.includes("🔴") || sub.status.includes("❌") },
     ];
 
-    const filtered = list.filter(FILTERS.find((f) => f.key === activeFilter)!.match);
-    const totalEarnings = list.reduce((sum, sub) => sum + sub.calculated_payout, 0);
-    const totalViews = list.reduce((sum, sub) => sum + sub.play_count, 0);
-    const activeCount = list.filter((sub) => sub.status.includes("🟢")).length;
+    const searched = searchQuery
+        ? list.filter((submission) => [submission.video_url, submission.campaign_name, submission.status].join(" ").toLowerCase().includes(searchQuery))
+        : list;
+    const filtered = searched.filter(FILTERS.find((filter) => filter.key === activeFilter)!.match);
+    const totalEarnings = searched.reduce((sum, sub) => sum + sub.calculated_payout, 0);
+    const totalViews = searched.reduce((sum, sub) => sum + sub.play_count, 0);
+    const activeCount = searched.filter((sub) => sub.status.includes("🟢")).length;
 
     return (
         <div className="space-y-7 pb-12 w-full">
@@ -93,28 +94,25 @@ export function SubmissionsPage() {
                 <p className="text-slate-500 text-sm font-medium">{s.subtitle}</p>
             </div>
 
-            {/* Mockup Banner */}
             {shouldMockSubmissions && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
-                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
                     {error && <span className="block text-xs mt-1">submissions: {error}</span>}
                 </div>
             )}
 
-            {/* Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <SummaryCard label={s.totalSubmitted} value={loading && !shouldMockSubmissions ? "..." : String(list.length)} icon={<Video size={18} />} iconBg="bg-slate-100" iconColor="text-slate-600" />
+                <SummaryCard label={s.totalSubmitted} value={loading && !shouldMockSubmissions ? "..." : String(searched.length)} icon={<Video size={18} />} iconBg="bg-slate-100" iconColor="text-slate-600" />
                 <SummaryCard label={s.activeEarning} value={loading && !shouldMockSubmissions ? "..." : String(activeCount)} icon={<Eye size={18} />} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
                 <SummaryCard label={s.totalViews} value={loading && !shouldMockSubmissions ? "..." : fmtViews(totalViews)} icon={<Eye size={18} />} iconBg="bg-blue-100" iconColor="text-blue-600" />
                 <SummaryCard label={s.totalEarnings} value={loading && !shouldMockSubmissions ? "..." : `฿${fmt(totalEarnings)}`} icon={<DollarSign size={18} />} iconBg="bg-violet-100" iconColor="text-violet-600" />
             </div>
 
-            {/* Filter Tabs */}
             <div className="flex gap-2 flex-wrap">
                 {FILTERS.map((filter) => {
-                    const count = list.filter(filter.match).length;
+                    const count = searched.filter(filter.match).length;
                     return (
                         <button key={filter.key} onClick={() => setActiveFilter(filter.key)}
                             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeFilter === filter.key
@@ -129,7 +127,6 @@ export function SubmissionsPage() {
                 })}
             </div>
 
-            {/* List */}
             <div className="space-y-3">
                 {loading && !shouldMockSubmissions ? (
                     Array.from({ length: 3 }).map((_, i) => (
@@ -140,12 +137,12 @@ export function SubmissionsPage() {
                 ) : filtered.length === 0 ? (
                     <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
                         <Video size={40} className="text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500 font-semibold">{s.noSubmissions}</p>
-                        <p className="text-slate-400 text-sm mt-1">{s.noSubmissionsSub}</p>
+                        <p className="text-slate-500 font-semibold">{searchQuery ? `No submissions match "${searchQuery}"` : s.noSubmissions}</p>
+                        {!searchQuery && <p className="text-slate-400 text-sm mt-1">{s.noSubmissionsSub}</p>}
                     </div>
                 ) : (
-                    filtered.map((sub) => (
-                        <SubmissionCard key={sub.id} submission={sub}
+                    filtered.map((submission) => (
+                        <SubmissionCard key={submission.id} submission={submission}
                             getStatusLabel={getStatusLabel} getStatusDesc={getStatusDesc} />
                     ))
                 )}
@@ -153,8 +150,6 @@ export function SubmissionsPage() {
         </div>
     );
 }
-
-// ─── Submission Card ──────────────────────────────────────────────────────────
 
 function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
     submission: SubmissionResponse;

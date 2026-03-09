@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, CheckCircle2, AlertCircle, Clock, Building2, ArrowDownToLine, Info, XCircle, Ban } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { requestJson } from "@/lib/clientApi";
+import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useMe, usePayouts } from "@/lib/portalApi";
 import type { PayoutResponse } from "@/lib/portalApi";
-import { FORCE_PORTAL_MOCK_MODE, MOCK_CLIPPER, MOCK_PAYOUTS } from "@/modules/app-portal/mockData";
+import { MOCK_CLIPPER, MOCK_PAYOUTS } from "@/modules/app-portal/mockData";
 import { resolvePortalRole, ROLE_PERMISSIONS } from "@/modules/app-portal/roleConfig";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 const fmt = (n: number) => new Intl.NumberFormat("th-TH").format(n);
-const fmtDate = (s: string) => new Date(s).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
+const fmtDate = (value: string) => new Date(value).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
 const PRESET_AMOUNTS = [500, 1000, 5000, 10000];
 
 function getPayoutStatusStyle(status: string) {
@@ -22,8 +23,6 @@ function getPayoutStatusStyle(status: string) {
     if (status.includes("🚫")) return { badge: "bg-slate-100 text-slate-600 border-slate-200", icon: <Ban size={14} /> };
     return { badge: "bg-slate-100 text-slate-600 border-slate-200", icon: <Clock size={14} /> };
 }
-
-// ─── Skeletons ────────────────────────────────────────────────────────────────
 
 function BalanceSkeleton() {
     return (
@@ -35,35 +34,40 @@ function BalanceSkeleton() {
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export function WithdrawPage() {
     const { t } = useLanguage();
+    const searchParams = useSearchParams();
     const a = t.app;
     const w = a.withdraw;
+    const searchQuery = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
-    const { data: clipper, loading: meLoading, error: meError } = useMe();
-    const { data: payouts, loading: payoutsLoading, error: payoutsError, refetch } = usePayouts();
+    const { data: clipper, loading: meLoading, error: meError, refetch: refetchMe } = useMe();
+    const { data: payouts, loading: payoutsLoading, error: payoutsError, refetch: refetchPayouts } = usePayouts();
 
-    const shouldMockMe = FORCE_PORTAL_MOCK_MODE || (Boolean(meError) && !meLoading);
-    const shouldMockPayouts = FORCE_PORTAL_MOCK_MODE || (Boolean(payoutsError) && !payoutsLoading);
+    const shouldMockMe = shouldUsePortalMockData(Boolean(meError) && !meLoading);
+    const shouldMockPayouts = shouldUsePortalMockData(Boolean(payoutsError) && !payoutsLoading);
     const isMockMode = shouldMockMe || shouldMockPayouts;
 
     const clipperData = shouldMockMe ? MOCK_CLIPPER : (clipper ?? null);
     const payoutData = shouldMockPayouts ? MOCK_PAYOUTS : (payouts ?? []);
+    const filteredPayouts = searchQuery
+        ? payoutData.filter((payout) => [payout.status, payout.bank_type, payout.reason, String(payout.amount)].join(" ").toLowerCase().includes(searchQuery))
+        : payoutData;
+
     const role = resolvePortalRole(clipperData);
     const rolePermissions = ROLE_PERMISSIONS[role];
 
     const [amount, setAmount] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+    const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
     const pendingBalance = clipperData?.pending_balance ?? 0;
     const parsedAmount = parseInt(amount, 10);
     const minWithdrawAmount = rolePermissions.minWithdrawAmount;
     const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= minWithdrawAmount && parsedAmount % 100 === 0 && parsedAmount <= pendingBalance;
 
-    const hasPendingRequest = payoutData.some((p: PayoutResponse) => p.status.includes("⏳"));
+    const hasPendingRequest = payoutData.some((payout: PayoutResponse) => payout.status.includes("⏳"));
 
     function getPayoutStatusLabel(status: string) {
         if (status.includes("✅")) return a.status.paid;
@@ -91,14 +95,31 @@ export function WithdrawPage() {
     const handleWithdraw = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!isValidAmount) return;
+
         setSubmitting(true);
-        // NOTE: No HTTP endpoint for payout request yet — done via Discord bot !withdraw command
-        // Placeholder implementation
-        await new Promise((r) => setTimeout(r, 1200));
-        setSubmitStatus("success");
-        setAmount("");
-        setSubmitting(false);
-        setTimeout(() => { setSubmitStatus("idle"); refetch(); }, 3000);
+        setSubmitStatus("idle");
+        setSubmitMessage(null);
+
+        try {
+            await requestJson("/api/portal/payouts", {
+                method: "POST",
+                body: JSON.stringify({ amount: parsedAmount }),
+            });
+            setSubmitStatus("success");
+            setSubmitMessage(w.successMsg);
+            setAmount("");
+            refetchMe();
+            refetchPayouts();
+            setTimeout(() => {
+                setSubmitStatus("idle");
+                setSubmitMessage(null);
+            }, 3000);
+        } catch (requestError) {
+            setSubmitStatus("error");
+            setSubmitMessage(requestError instanceof Error ? requestError.message : "Unable to request payout");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const validation = validationMessage();
@@ -118,16 +139,14 @@ export function WithdrawPage() {
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
-                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
                     {meError && <span className="block text-xs mt-1">me: {meError}</span>}
                     {payoutsError && <span className="block text-xs">payouts: {payoutsError}</span>}
                 </div>
             )}
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Left */}
                 <div className="xl:col-span-2 space-y-5">
-                    {/* Balance Card */}
                     {meLoading && !shouldMockMe ? <BalanceSkeleton /> : (
                         <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-7 text-white shadow-lg">
                             <p className="text-sm font-semibold text-blue-200 mb-1">{w.availableBalance}</p>
@@ -146,7 +165,6 @@ export function WithdrawPage() {
                         </div>
                     )}
 
-                    {/* Pending Warning */}
                     {hasPendingRequest && (
                         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
                             <Clock size={18} className="text-amber-600 shrink-0 mt-0.5" />
@@ -157,14 +175,12 @@ export function WithdrawPage() {
                         </div>
                     )}
 
-                    {/* Withdraw Form */}
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
                         <h2 className="font-bold text-slate-800 mb-5 flex items-center gap-2">
                             <ArrowDownToLine size={18} className="text-slate-400" />
                             {w.requestWithdrawal}
                         </h2>
                         <form onSubmit={handleWithdraw} className="space-y-5">
-                            {/* Preset */}
                             <div>
                                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{w.quickSelect}</p>
                                 <div className="flex gap-2 flex-wrap">
@@ -184,7 +200,6 @@ export function WithdrawPage() {
                                 </div>
                             </div>
 
-                            {/* Amount */}
                             <div>
                                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{w.amountLabel}</p>
                                 <div className="relative">
@@ -204,7 +219,6 @@ export function WithdrawPage() {
                                 </AnimatePresence>
                             </div>
 
-                            {/* Bank Info */}
                             {(!meLoading || shouldMockMe) && clipperData && (
                                 <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
                                     <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
@@ -233,7 +247,13 @@ export function WithdrawPage() {
                                 {submitStatus === "success" && (
                                     <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                                         className="flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl">
-                                        <CheckCircle2 size={16} /> {w.successMsg}
+                                        <CheckCircle2 size={16} /> {submitMessage ?? w.successMsg}
+                                    </motion.div>
+                                )}
+                                {submitStatus === "error" && (
+                                    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                        className="flex items-center gap-2 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-4 py-3 rounded-xl">
+                                        <AlertCircle size={16} /> {submitMessage ?? "Unable to request payout"}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -241,9 +261,7 @@ export function WithdrawPage() {
                     </div>
                 </div>
 
-                {/* Right */}
                 <div className="space-y-5">
-                    {/* Rules */}
                     <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                         <h3 className="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
                             <Info size={16} className="text-slate-400" /> {w.rulesTitle}
@@ -258,7 +276,6 @@ export function WithdrawPage() {
                         </ul>
                     </div>
 
-                    {/* History */}
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-slate-100">
                             <h3 className="font-bold text-slate-800 text-sm">{w.history}</h3>
@@ -274,20 +291,22 @@ export function WithdrawPage() {
                                         <div className="h-5 bg-slate-200 rounded w-16" />
                                     </div>
                                 ))
-                            ) : payoutData.length === 0 ? (
-                                <p className="text-center text-slate-400 text-sm py-8">{w.noPayouts}</p>
+                            ) : filteredPayouts.length === 0 ? (
+                                <p className="text-center text-slate-400 text-sm py-8">
+                                    {searchQuery ? `No payouts match "${searchQuery}"` : w.noPayouts}
+                                </p>
                             ) : (
-                                payoutData.map((p: PayoutResponse) => {
-                                    const { badge, icon } = getPayoutStatusStyle(p.status);
+                                filteredPayouts.map((payout: PayoutResponse) => {
+                                    const { badge, icon } = getPayoutStatusStyle(payout.status);
                                     return (
-                                        <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
+                                        <div key={payout.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-slate-700">฿{fmt(p.amount)}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5">{fmtDate(p.created_at)}</p>
-                                                {p.reason && <p className="text-[11px] text-rose-500 mt-0.5">{p.reason}</p>}
+                                                <p className="text-sm font-bold text-slate-700">฿{fmt(payout.amount)}</p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5">{fmtDate(payout.created_at)}</p>
+                                                {payout.reason && <p className="text-[11px] text-rose-500 mt-0.5">{payout.reason}</p>}
                                             </div>
                                             <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wide ${badge}`}>
-                                                {icon} {getPayoutStatusLabel(p.status)}
+                                                {icon} {getPayoutStatusLabel(payout.status)}
                                             </span>
                                         </div>
                                     );

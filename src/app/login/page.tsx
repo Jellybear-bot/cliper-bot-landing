@@ -26,14 +26,14 @@ export default function LoginPage() {
                             className="w-full relative overflow-hidden group/btn flex items-center justify-center gap-3 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-[#5865F2]/20"
                         >
                             <LogIn size={20} className="group-hover/btn:-translate-y-1 transition-transform" />
-                            <span>Bypass Login (Temporary)</span>
+                            <span>Developer Sign In</span>
                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
                         </button>
                     </form>
 
                     <div className="mt-8 text-center text-xs text-zinc-500 font-medium relative z-10">
-                        <p>This is a temporary bypass for development.</p>
-                        <p className="mt-1">Real Discord OAuth will replace this feature.</p>
+                        <p>This signs in with the local development session flow.</p>
+                        <p className="mt-1">Real Discord OAuth still needs backend/auth provider integration.</p>
                     </div>
                 </div>
             </div>

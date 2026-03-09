@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { requestJson } from "@/lib/clientApi";
 
 type FormState = {
     firstName: string;
@@ -30,21 +31,40 @@ const initialState: FormState = {
 };
 
 export default function BrandInquirySection() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const b = t.brandInquiry;
 
     const [form, setForm] = useState<FormState>(initialState);
-    const [submitted, setSubmitted] = useState(false);
+    const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+    const [message, setMessage] = useState<string | null>(null);
 
     const onChange = (key: keyof FormState, value: string) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
-    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setSubmitted(true);
-        setForm(initialState);
-        setTimeout(() => setSubmitted(false), 4000);
+        setStatus("submitting");
+        setMessage(null);
+
+        try {
+            await requestJson("/api/brand-inquiry", {
+                method: "POST",
+                body: JSON.stringify(form),
+            });
+            setStatus("success");
+            setMessage(b.success);
+            setForm(initialState);
+        } catch (error) {
+            setStatus("error");
+            setMessage(
+                error instanceof Error
+                    ? error.message
+                    : language === "th"
+                        ? "ยังไม่สามารถส่งข้อมูลได้"
+                        : "Unable to submit your inquiry.",
+            );
+        }
     };
 
     return (
@@ -126,13 +146,21 @@ export default function BrandInquirySection() {
                         />
                     </div>
 
-                    <button type="submit" className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 transition-colors">
-                        {b.submit}
+                    <button type="submit" disabled={status === "submitting"} className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 transition-colors disabled:opacity-60">
+                        {status === "submitting"
+                            ? language === "th" ? "กำลังส่ง..." : "Submitting..."
+                            : b.submit}
                     </button>
 
-                    {submitted && (
+                    {status === "success" && message && (
                         <p className="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-sm font-medium">
-                            {b.success}
+                            {message}
+                        </p>
+                    )}
+
+                    {status === "error" && message && (
+                        <p className="text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 text-sm font-medium">
+                            {message}
                         </p>
                     )}
                 </form>

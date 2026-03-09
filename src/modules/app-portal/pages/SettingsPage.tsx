@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Building2, Shield, Eye, TrendingUp, CheckCircle2, Edit3, Save, X, BadgeDollarSign, Video } from "lucide-react";
+import { User, Building2, Shield, Eye, TrendingUp, CheckCircle2, Edit3, Save, X, BadgeDollarSign, Video, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { requestJson } from "@/lib/clientApi";
+import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useMe } from "@/lib/portalApi";
-import { FORCE_PORTAL_MOCK_MODE, MOCK_CLIPPER } from "@/modules/app-portal/mockData";
+import { MOCK_CLIPPER } from "@/modules/app-portal/mockData";
 
 const BANK_OPTIONS = [
     "กสิกรไทย (KBANK)", "กรุงเทพ (BBL)", "ไทยพาณิชย์ (SCB)",
@@ -18,9 +20,7 @@ const fmtViews = (n: number) => {
     if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
     return fmt(n);
 };
-const fmtDate = (d: string) => new Date(d).toLocaleDateString("th-TH", { day: "2-digit", month: "long", year: "numeric" });
-
-// ─── Skeletons ────────────────────────────────────────────────────────────────
+const fmtDate = (value: string) => new Date(value).toLocaleDateString("th-TH", { day: "2-digit", month: "long", year: "numeric" });
 
 function ProfileSkeleton() {
     return (
@@ -71,23 +71,21 @@ function StatsSkeleton() {
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export function SettingsPage() {
     const { t } = useLanguage();
     const a = t.app;
     const s = a.settings;
 
-    const { data: clipper, loading, error } = useMe();
-    const shouldMockMe = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
+    const { data: clipper, loading, error, refetch } = useMe();
+    const shouldMockMe = shouldUsePortalMockData(Boolean(error) && !loading);
     const clipperData = shouldMockMe ? MOCK_CLIPPER : (clipper ?? null);
 
     const [editingBank, setEditingBank] = useState(false);
     const [bankNo, setBankNo] = useState("");
     const [bankType, setBankType] = useState(BANK_OPTIONS[0]);
-    const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+    const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+    const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-    // Sync bank form state when data loads
     useEffect(() => {
         if (clipperData) {
             setBankNo(clipperData.bank_no ?? "");
@@ -98,17 +96,33 @@ export function SettingsPage() {
     const handleSaveBank = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaveStatus("saving");
-        // NOTE: No HTTP endpoint for updating bank info yet — done via Discord bot !setbank command
-        await new Promise((r) => setTimeout(r, 1000));
-        setSaveStatus("saved");
-        setEditingBank(false);
-        setTimeout(() => setSaveStatus("idle"), 2500);
+        setSaveMessage(null);
+
+        try {
+            await requestJson("/api/portal/me/bank", {
+                method: "PATCH",
+                body: JSON.stringify({ bankNo, bankType }),
+            });
+            setSaveStatus("saved");
+            setSaveMessage(s.savedSuccess);
+            setEditingBank(false);
+            refetch();
+            setTimeout(() => {
+                setSaveStatus("idle");
+                setSaveMessage(null);
+            }, 2500);
+        } catch (requestError) {
+            setSaveStatus("error");
+            setSaveMessage(requestError instanceof Error ? requestError.message : "Unable to update bank account");
+        }
     };
 
     const handleCancelEdit = () => {
         setEditingBank(false);
         setBankNo(clipperData?.bank_no ?? "");
         setBankType(clipperData?.bank_type || BANK_OPTIONS[0]);
+        setSaveStatus("idle");
+        setSaveMessage(null);
     };
 
     const isNormal = clipperData?.status.includes("🟢") ?? true;
@@ -124,12 +138,11 @@ export function SettingsPage() {
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
-                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
                     {error && <span className="block text-xs mt-1">me: {error}</span>}
                 </div>
             )}
 
-            {/* Profile Card */}
             {loading && !shouldMockMe ? <ProfileSkeleton /> : (
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
@@ -166,7 +179,6 @@ export function SettingsPage() {
                 </div>
             )}
 
-            {/* Bank Account */}
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -174,8 +186,10 @@ export function SettingsPage() {
                         <h2 className="font-bold text-slate-800 text-sm">{s.bankAccount}</h2>
                     </div>
                     {!editingBank && (!loading || shouldMockMe) && (
-                        <button onClick={() => setEditingBank(true)}
-                            className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors border border-blue-200">
+                        <button
+                            onClick={() => setEditingBank(true)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors border border-blue-200"
+                        >
                             <Edit3 size={13} /> {a.common.edit}
                         </button>
                     )}
@@ -185,7 +199,13 @@ export function SettingsPage() {
                         {saveStatus === "saved" && (
                             <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                                 className="flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl mb-4">
-                                <CheckCircle2 size={16} /> {s.savedSuccess}
+                                <CheckCircle2 size={16} /> {saveMessage ?? s.savedSuccess}
+                            </motion.div>
+                        )}
+                        {saveStatus === "error" && (
+                            <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                className="flex items-center gap-2 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-4 py-3 rounded-xl mb-4">
+                                <AlertCircle size={16} /> {saveMessage ?? "Unable to update bank account"}
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -224,25 +244,38 @@ export function SettingsPage() {
                         <form onSubmit={handleSaveBank} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{s.bankName}</label>
-                                <select value={bankType} onChange={(e) => setBankType(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                                    {BANK_OPTIONS.map((b) => <option key={b} value={b}>{b}</option>)}
+                                <select
+                                    value={bankType}
+                                    onChange={(e) => setBankType(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                >
+                                    {BANK_OPTIONS.map((bank) => <option key={bank} value={bank}>{bank}</option>)}
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{s.accountNumber}</label>
-                                <input type="text" value={bankNo} onChange={(e) => setBankNo(e.target.value)}
+                                <input
+                                    type="text"
+                                    value={bankNo}
+                                    onChange={(e) => setBankNo(e.target.value)}
                                     placeholder={s.accountPlaceholder}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                />
                             </div>
                             <div className="flex gap-3 pt-1">
-                                <button type="submit" disabled={saveStatus === "saving"}
-                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors disabled:opacity-60">
+                                <button
+                                    type="submit"
+                                    disabled={saveStatus === "saving"}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors disabled:opacity-60"
+                                >
                                     <Save size={15} />
                                     {saveStatus === "saving" ? a.common.saving : a.common.save}
                                 </button>
-                                <button type="button" onClick={handleCancelEdit}
-                                    className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm px-5 py-2.5 rounded-xl transition-colors">
+                                <button
+                                    type="button"
+                                    onClick={handleCancelEdit}
+                                    className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
+                                >
                                     <X size={15} /> {a.common.cancel}
                                 </button>
                             </div>
@@ -251,7 +284,6 @@ export function SettingsPage() {
                 </div>
             </div>
 
-            {/* Account Stats */}
             {loading && !shouldMockMe ? <StatsSkeleton /> : (
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
@@ -271,7 +303,11 @@ export function SettingsPage() {
 }
 
 function StatItem({ icon, label, value, iconBg, iconColor }: {
-    icon: React.ReactNode; label: string; value: string; iconBg: string; iconColor: string;
+    icon: React.ReactNode;
+    label: string;
+    value: string;
+    iconBg: string;
+    iconColor: string;
 }) {
     return (
         <div className="text-center">

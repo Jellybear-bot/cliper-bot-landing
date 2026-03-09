@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Megaphone, ExternalLink, Send, CheckCircle2, AlertCircle, Link as LinkIcon, TrendingUp, Target, DollarSign, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { requestJson } from "@/lib/clientApi";
+import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useCampaigns, useMe, useSubmissions } from "@/lib/portalApi";
 import type { CampaignResponse, SubmissionResponse } from "@/lib/portalApi";
-import { FORCE_PORTAL_MOCK_MODE, MOCK_CAMPAIGNS, MOCK_CLIPPER, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
+import { MOCK_CAMPAIGNS, MOCK_CLIPPER, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
 import { isVipCampaign, resolvePortalRole, ROLE_PERMISSIONS } from "@/modules/app-portal/roleConfig";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n: number) => new Intl.NumberFormat("th-TH").format(n);
 const fmtViews = (n: number) => {
@@ -25,8 +26,6 @@ function getStatusStyle(status: string) {
     if (status.includes("📉")) return "bg-blue-100 text-blue-700";
     return "bg-slate-100 text-slate-600";
 }
-
-// ─── Skeletons ────────────────────────────────────────────────────────────────
 
 function CampaignSkeleton() {
     return (
@@ -48,20 +47,20 @@ function CampaignSkeleton() {
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export function CampaignsPage() {
     const { t } = useLanguage();
+    const searchParams = useSearchParams();
     const a = t.app;
     const c = a.campaigns;
+    const searchQuery = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
     const { data: clipper, loading: meLoading, error: meError } = useMe();
     const { data: campaigns, loading, error } = useCampaigns();
-    const { data: mySubmissions, loading: submissionsLoading, error: submissionsError } = useSubmissions();
+    const { data: mySubmissions, loading: submissionsLoading, error: submissionsError, refetch: refetchSubmissions } = useSubmissions();
 
-    const shouldMockMe = FORCE_PORTAL_MOCK_MODE || (Boolean(meError) && !meLoading);
-    const shouldMockCampaigns = FORCE_PORTAL_MOCK_MODE || (Boolean(error) && !loading);
-    const shouldMockSubmissions = FORCE_PORTAL_MOCK_MODE || (Boolean(submissionsError) && !submissionsLoading);
+    const shouldMockMe = shouldUsePortalMockData(Boolean(meError) && !meLoading);
+    const shouldMockCampaigns = shouldUsePortalMockData(Boolean(error) && !loading);
+    const shouldMockSubmissions = shouldUsePortalMockData(Boolean(submissionsError) && !submissionsLoading);
     const isMockMode = shouldMockCampaigns || shouldMockSubmissions;
 
     const clipperData = shouldMockMe ? MOCK_CLIPPER : (clipper ?? null);
@@ -71,10 +70,16 @@ export function CampaignsPage() {
     const campaignsData = shouldMockCampaigns ? MOCK_CAMPAIGNS : (campaigns ?? []);
     const submissionsData = shouldMockSubmissions ? MOCK_SUBMISSIONS : (mySubmissions ?? []);
 
-    const activeCampaigns = campaignsData.filter((c) => c.status.includes("🟢"));
-    const completedCampaigns = campaignsData.filter((c) => c.status.includes("🔴"));
+    const filteredCampaigns = searchQuery
+        ? campaignsData.filter((campaign) => {
+            const haystack = [campaign.campaign_name, campaign.client_name, campaign.status].join(" ").toLowerCase();
+            return haystack.includes(searchQuery);
+        })
+        : campaignsData;
 
-    const joinedCampaignNames = new Set(submissionsData.map((s) => s.campaign_name));
+    const activeCampaigns = filteredCampaigns.filter((campaign) => campaign.status.includes("🟢"));
+    const completedCampaigns = filteredCampaigns.filter((campaign) => campaign.status.includes("🔴"));
+    const joinedCampaignNames = new Set(submissionsData.map((submission) => submission.campaign_name));
 
     return (
         <div className="space-y-8 pb-12 w-full">
@@ -87,7 +92,6 @@ export function CampaignsPage() {
                 </div>
             </div>
 
-            {/* How It Works */}
             <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
                 <p className="text-sm font-bold text-blue-800 mb-2">{c.howItWorks}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
@@ -100,19 +104,17 @@ export function CampaignsPage() {
                 </div>
             </div>
 
-            {/* Mockup Banner */}
             {isMockMode && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
-                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
                     {error && <span className="block text-xs mt-1">campaigns: {error}</span>}
                     {submissionsError && <span className="block text-xs">submissions: {submissionsError}</span>}
                     {meError && <span className="block text-xs">me: {meError}</span>}
                 </div>
             )}
 
-            {/* Active Campaigns */}
             <div>
                 <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -124,7 +126,9 @@ export function CampaignsPage() {
                     ) : activeCampaigns.length === 0 ? (
                         <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl">
                             <Megaphone size={36} className="text-slate-300 mx-auto mb-2" />
-                            <p className="text-slate-400 font-medium">ไม่มีแคมเปญที่เปิดรับในขณะนี้</p>
+                            <p className="text-slate-400 font-medium">
+                                {searchQuery ? `No active campaigns match "${searchQuery}"` : "ไม่มีแคมเปญที่เปิดรับในขณะนี้"}
+                            </p>
                         </div>
                     ) : (
                         activeCampaigns.map((campaign) => (
@@ -132,16 +136,15 @@ export function CampaignsPage() {
                                 key={campaign.id}
                                 campaign={campaign}
                                 isJoined={joinedCampaignNames.has(campaign.campaign_name)}
-                                mySubmissions={submissionsData.filter((s) => s.campaign_name === campaign.campaign_name)}
-                                role={role}
+                                mySubmissions={submissionsData.filter((submission) => submission.campaign_name === campaign.campaign_name)}
                                 rolePermissions={rolePermissions}
+                                onSubmitted={refetchSubmissions}
                             />
                         ))
                     )}
                 </div>
             </div>
 
-            {/* Completed */}
             {completedCampaigns.length > 0 && (
                 <div>
                     <h2 className="text-lg font-bold text-slate-500 mb-4">{c.completedCampaigns}</h2>
@@ -166,14 +169,18 @@ export function CampaignsPage() {
     );
 }
 
-// ─── Campaign Card ────────────────────────────────────────────────────────────
-
-function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions }: {
+function CampaignCard({
+    campaign,
+    isJoined,
+    mySubmissions,
+    rolePermissions,
+    onSubmitted,
+}: {
     campaign: CampaignResponse;
     isJoined: boolean;
     mySubmissions: SubmissionResponse[];
-    role: "member" | "vip";
     rolePermissions: { canAccessVipCampaign: boolean; payoutBonusPercent: number };
+    onSubmitted: () => void;
 }) {
     const { t } = useLanguage();
     const a = t.app;
@@ -184,6 +191,7 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
     const [videoUrl, setVideoUrl] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+    const [submitMessage, setSubmitMessage] = useState<string | null>(null);
 
     const budgetRemaining = campaign.total_budget - campaign.budget_spent;
     const budgetProgress = Math.round((campaign.budget_spent / campaign.total_budget) * 100);
@@ -204,14 +212,37 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!videoUrl) return;
+
         setSubmitting(true);
-        // NOTE: No HTTP endpoint for submission yet — done via Discord bot !join command
-        // This is a placeholder for future implementation
-        await new Promise((r) => setTimeout(r, 1000));
-        setSubmitStatus("success");
-        setVideoUrl("");
-        setSubmitting(false);
-        setTimeout(() => { setSubmitStatus("idle"); setShowJoinForm(false); }, 2500);
+        setSubmitStatus("idle");
+        setSubmitMessage(null);
+
+        try {
+            await requestJson("/api/portal/submissions", {
+                method: "POST",
+                body: JSON.stringify({
+                    campaignId: campaign.id,
+                    campaignName: campaign.campaign_name,
+                    videoUrl,
+                }),
+            });
+
+            setSubmitStatus("success");
+            setSubmitMessage(c.successMsg);
+            setVideoUrl("");
+            onSubmitted();
+
+            setTimeout(() => {
+                setSubmitStatus("idle");
+                setSubmitMessage(null);
+                setShowJoinForm(false);
+            }, 2500);
+        } catch (error) {
+            setSubmitStatus("error");
+            setSubmitMessage(error instanceof Error ? error.message : c.errorMsg);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -239,7 +270,6 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
                     </div>
                 </div>
 
-                {/* Stats */}
                 <div className="grid grid-cols-3 gap-4 mb-5">
                     <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
                         <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
@@ -269,38 +299,47 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
                     </div>
                 </div>
 
-                {/* Progress */}
                 <div className="space-y-2.5 mb-5">
                     <ProgressBar label={c.budgetUsed} progress={budgetProgress} color="bg-violet-500" />
                     <ProgressBar label={c.viewTarget} progress={viewProgress} color="bg-emerald-500" />
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-3 flex-wrap">
                     {campaign.campaign_material_link && (
-                        <a href={campaign.campaign_material_link} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-300 px-4 py-2 rounded-xl transition-colors">
+                        <a
+                            href={campaign.campaign_material_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-300 px-4 py-2 rounded-xl transition-colors"
+                        >
                             <ExternalLink size={15} /> {c.campaignMaterials}
                         </a>
                     )}
                     {isJoined ? (
                         <div className="flex items-center gap-2 flex-wrap">
-                            <button onClick={() => setShowJoinForm(!showJoinForm)}
+                            <button
+                                onClick={() => setShowJoinForm(!showJoinForm)}
                                 disabled={!canJoinCampaign}
-                                className="flex items-center gap-2 text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-xl transition-colors">
+                                className="flex items-center gap-2 text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-xl transition-colors"
+                            >
                                 <LinkIcon size={15} /> {c.submitAnotherVideo}
                             </button>
                             {mySubmissions.length > 0 && (
-                                <button onClick={() => setShowMyVideos(!showMyVideos)}
-                                    className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-800 px-3 py-2 rounded-xl transition-colors">
+                                <button
+                                    onClick={() => setShowMyVideos(!showMyVideos)}
+                                    className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-800 px-3 py-2 rounded-xl transition-colors"
+                                >
                                     {c.myVideos} ({mySubmissions.length})
                                     <ChevronDown size={15} className={`transition-transform ${showMyVideos ? "rotate-180" : ""}`} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <button onClick={() => setShowJoinForm(!showJoinForm)} disabled={!canJoinCampaign}
-                            className="flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 px-5 py-2.5 rounded-xl transition-opacity shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button
+                            onClick={() => setShowJoinForm(!showJoinForm)}
+                            disabled={!canJoinCampaign}
+                            className="flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 px-5 py-2.5 rounded-xl transition-opacity shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             <Megaphone size={15} /> {canJoinCampaign ? c.joinCampaign : "สำหรับ VIP เท่านั้น"}
                         </button>
                     )}
@@ -313,7 +352,6 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
                 )}
             </div>
 
-            {/* Join Form */}
             <AnimatePresence>
                 {showJoinForm && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
@@ -322,12 +360,20 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
                             <form onSubmit={handleSubmit} className="flex gap-3">
                                 <div className="flex-1 relative">
                                     <LinkIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                    <input type="url" required value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)}
+                                    <input
+                                        type="url"
+                                        required
+                                        value={videoUrl}
+                                        onChange={(e) => setVideoUrl(e.target.value)}
                                         placeholder={c.urlPlaceholder}
-                                        className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-700 placeholder:text-slate-400" />
+                                        className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-700 placeholder:text-slate-400"
+                                    />
                                 </div>
-                                <button type="submit" disabled={submitting || !videoUrl}
-                                    className="flex items-center gap-2 font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 shrink-0">
+                                <button
+                                    type="submit"
+                                    disabled={submitting || !videoUrl}
+                                    className="flex items-center gap-2 font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 shrink-0"
+                                >
                                     <Send size={15} />
                                     {submitting ? a.common.submitting : a.common.submit}
                                 </button>
@@ -336,13 +382,13 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
                                 {submitStatus === "success" && (
                                     <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                                         className="flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl mt-3">
-                                        <CheckCircle2 size={16} /> {c.successMsg}
+                                        <CheckCircle2 size={16} /> {submitMessage ?? c.successMsg}
                                     </motion.div>
                                 )}
                                 {submitStatus === "error" && (
                                     <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                                         className="flex items-center gap-2 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl mt-3">
-                                        <AlertCircle size={16} /> {c.errorMsg}
+                                        <AlertCircle size={16} /> {submitMessage ?? c.errorMsg}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -351,7 +397,6 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
                 )}
             </AnimatePresence>
 
-            {/* My Videos */}
             <AnimatePresence>
                 {showMyVideos && mySubmissions.length > 0 && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
@@ -359,26 +404,26 @@ function CampaignCard({ campaign, isJoined, mySubmissions, role, rolePermissions
                             <div className="px-6 py-3 bg-slate-50/50">
                                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{c.mySubmissionsLabel}</p>
                             </div>
-                            {mySubmissions.map((sub) => (
-                                <div key={sub.id} className="flex items-center gap-4 px-6 py-3 border-t border-slate-100 hover:bg-slate-50/50 transition-colors">
+                            {mySubmissions.map((submission) => (
+                                <div key={submission.id} className="flex items-center gap-4 px-6 py-3 border-t border-slate-100 hover:bg-slate-50/50 transition-colors">
                                     <div className="flex-1 min-w-0">
                                         <a
-                                            href={sub.video_url}
+                                            href={submission.video_url}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-2 truncate"
                                         >
-                                            <span className="truncate">{sub.video_url.replace("https://", "")}</span>
+                                            <span className="truncate">{submission.video_url.replace("https://", "")}</span>
                                             <ExternalLink size={12} className="shrink-0" />
                                         </a>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">{fmtViews(sub.play_count)} {a.campaigns.views}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">{fmtViews(submission.play_count)} {a.campaigns.views}</p>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
-                                        {sub.calculated_payout > 0 && (
-                                            <span className="text-xs font-bold text-emerald-600">฿{fmt(sub.calculated_payout)}</span>
+                                        {submission.calculated_payout > 0 && (
+                                            <span className="text-xs font-bold text-emerald-600">฿{fmt(submission.calculated_payout)}</span>
                                         )}
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${getStatusStyle(sub.status)}`}>
-                                            {getSubStatusLabel(sub.status)}
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${getStatusStyle(submission.status)}`}>
+                                            {getSubStatusLabel(submission.status)}
                                         </span>
                                     </div>
                                 </div>

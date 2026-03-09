@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Wallet, Eye, TrendingUp, BadgeDollarSign, ChevronRight, Video, Megaphone, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useMe, useSubmissions } from "@/lib/portalApi";
 import type { SubmissionResponse } from "@/lib/portalApi";
-import { FORCE_PORTAL_MOCK_MODE, MOCK_CLIPPER, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { MOCK_CLIPPER, MOCK_SUBMISSIONS } from "@/modules/app-portal/mockData";
 
 const fmt = (n: number) => new Intl.NumberFormat("th-TH").format(n);
 const fmtCurrency = (n: number) => `฿${fmt(n)}`;
@@ -24,8 +24,6 @@ function getStatusStyle(status: string) {
     if (status.includes("📉")) return "bg-blue-100 text-blue-700";
     return "bg-slate-100 text-slate-600";
 }
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
     return (
@@ -53,17 +51,17 @@ function SkeletonRow() {
     );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export function DashboardPage() {
     const { t } = useLanguage();
+    const searchParams = useSearchParams();
     const a = t.app;
     const d = a.dashboard;
+    const searchQuery = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
     const { data: clipper, loading: meLoading, error: meError } = useMe();
     const { data: submissions, loading: subLoading, error: subError } = useSubmissions();
 
-    const isMockMode = FORCE_PORTAL_MOCK_MODE || (Boolean(meError || subError) && !meLoading && !subLoading);
+    const isMockMode = shouldUsePortalMockData(Boolean(meError || subError) && !meLoading && !subLoading);
     const clipperData = isMockMode ? MOCK_CLIPPER : (clipper ?? null);
     const submissionData = isMockMode ? MOCK_SUBMISSIONS : (submissions ?? []);
 
@@ -75,11 +73,13 @@ export function DashboardPage() {
         return status;
     }
 
-    const recentSubs = submissionData.slice(0, 3);
+    const filteredSubmissions = searchQuery
+        ? submissionData.filter((submission) => [submission.video_url, submission.campaign_name, submission.status].join(" ").toLowerCase().includes(searchQuery))
+        : submissionData;
+    const recentSubs = filteredSubmissions.slice(0, 3);
 
     return (
         <div className="space-y-8 pb-12 w-full">
-            {/* Header */}
             <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-slate-200 text-slate-600 font-medium text-xs mb-3">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -89,18 +89,16 @@ export function DashboardPage() {
                 <p className="text-slate-500 text-sm font-medium">{d.subtitle}</p>
             </div>
 
-            {/* Mockup Banner */}
             {isMockMode && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
-                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราว"}
+                        : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
                     {meError && <span className="block text-xs mt-1">me: {meError}</span>}
                     {subError && <span className="block text-xs">submissions: {subError}</span>}
                 </div>
             )}
 
-            {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                 {meLoading && !isMockMode ? (
                     Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
@@ -114,9 +112,7 @@ export function DashboardPage() {
                 )}
             </div>
 
-            {/* Main Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Recent Submissions */}
                 <div className="xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                         <div className="flex items-center gap-2">
@@ -131,27 +127,29 @@ export function DashboardPage() {
                         {subLoading && !isMockMode ? (
                             Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
                         ) : recentSubs.length === 0 ? (
-                            <div className="text-center py-10 text-slate-400 text-sm">ยังไม่มีวิดีโอที่ส่ง</div>
+                            <div className="text-center py-10 text-slate-400 text-sm">
+                                {searchQuery ? `No submissions match "${searchQuery}"` : "ยังไม่มีวิดีโอที่ส่ง"}
+                            </div>
                         ) : (
-                            recentSubs.map((s: SubmissionResponse) => (
-                                <div key={s.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50/60 transition-colors">
+                            recentSubs.map((submission: SubmissionResponse) => (
+                                <div key={submission.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50/60 transition-colors">
                                     <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
                                         <Video size={18} className="text-slate-500" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-slate-700 truncate">
-                                            {s.video_url.replace("https://", "")}
+                                            {submission.video_url.replace("https://", "")}
                                         </p>
                                         <p className="text-xs text-slate-400 font-medium mt-0.5">
-                                            {s.campaign_name} · {fmtViews(s.play_count)} {a.submissions.views}
+                                            {submission.campaign_name} · {fmtViews(submission.play_count)} {a.submissions.views}
                                         </p>
                                     </div>
                                     <div className="flex flex-col items-end gap-1.5 shrink-0">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${getStatusStyle(s.status)}`}>
-                                            {getStatusLabel(s.status)}
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${getStatusStyle(submission.status)}`}>
+                                            {getStatusLabel(submission.status)}
                                         </span>
-                                        {s.calculated_payout > 0 && (
-                                            <span className="text-xs font-bold text-emerald-600">{fmtCurrency(s.calculated_payout)}</span>
+                                        {submission.calculated_payout > 0 && (
+                                            <span className="text-xs font-bold text-emerald-600">{fmtCurrency(submission.calculated_payout)}</span>
                                         )}
                                     </div>
                                 </div>
@@ -160,9 +158,7 @@ export function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Right Column */}
                 <div className="flex flex-col gap-4">
-                    {/* Withdraw CTA */}
                     {!meLoading && (clipperData?.pending_balance ?? 0) >= 100 && (
                         <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-6 text-white shadow-lg">
                             <p className="text-sm font-semibold text-blue-200 mb-1">{d.readyToWithdraw}</p>
@@ -173,7 +169,6 @@ export function DashboardPage() {
                         </div>
                     )}
 
-                    {/* Quick Actions */}
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-slate-100">
                             <h3 className="font-bold text-slate-800 text-sm">{d.quickActions}</h3>
@@ -185,7 +180,6 @@ export function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Earnings Summary */}
                     {meLoading && !isMockMode ? (
                         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 animate-pulse space-y-3">
                             {Array.from({ length: 3 }).map((_, i) => (
@@ -214,7 +208,12 @@ export function DashboardPage() {
 }
 
 function StatCard({ label, value, sub, icon, iconBg, highlight }: {
-    label: string; value: string; sub: string; icon: React.ReactNode; iconBg: string; highlight?: boolean;
+    label: string;
+    value: string;
+    sub: string;
+    icon: React.ReactNode;
+    iconBg: string;
+    highlight?: boolean;
 }) {
     return (
         <div className={`relative rounded-2xl p-6 border shadow-sm overflow-hidden ${highlight ? "bg-gradient-to-br from-blue-600 to-violet-600 border-transparent" : "bg-white border-slate-200"}`}>

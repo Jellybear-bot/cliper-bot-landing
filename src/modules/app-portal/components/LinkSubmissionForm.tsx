@@ -3,8 +3,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Link as LinkIcon, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { requestJson } from "@/lib/clientApi";
 
-export function LinkSubmissionForm() {
+export function LinkSubmissionForm({
+    campaignId,
+    campaignName,
+}: {
+    campaignId?: string;
+    campaignName?: string;
+}) {
     const [url, setUrl] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -17,15 +24,23 @@ export function LinkSubmissionForm() {
         setIsSubmitting(true);
         setStatus("idle");
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        if (url.includes("error")) {
-            setStatus("error");
-        } else {
+        try {
+            if (!campaignId || !campaignName) {
+                throw new Error("Campaign context is required before submitting a link.");
+            }
+            await requestJson("/api/portal/submissions", {
+                method: "POST",
+                body: JSON.stringify({
+                    campaignId,
+                    campaignName,
+                    videoUrl: url,
+                }),
+            });
             setStatus("success");
             setUrl("");
             setTimeout(() => setStatus("idle"), 3000);
+        } catch {
+            setStatus("error");
         }
         setIsSubmitting(false);
     };
