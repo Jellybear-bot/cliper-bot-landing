@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { fetchClipperById, updateClipperBank } from "@/lib/backend";
-import { getSessionUser } from "@/lib/session";
+import { fetchClipperById, updateClipperBank, updateClipperBankWithDiscordToken } from "@/lib/backend";
+import { getDiscordAccessToken, getSessionUser } from "@/lib/session";
 
 export async function PATCH(request: Request) {
     const user = getSessionUser();
@@ -31,18 +31,40 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: "clipper not found" }, { status: 404 });
         }
 
-        const result = await updateClipperBank({
-            discord_id: user.discord_id,
-            bank_no: bankNo,
-            bank_type: bankType,
-        });
+        const accessToken = getDiscordAccessToken();
+        let result = accessToken
+            ? await updateClipperBankWithDiscordToken({
+                accessToken,
+                bank_no: bankNo,
+                bank_type: bankType,
+            })
+            : await updateClipperBank({
+                discord_id: user.discord_id,
+                bank_no: bankNo,
+                bank_type: bankType,
+            });
+
+        if (accessToken && !result.ok && result.status === 404) {
+            const fallback = await updateClipperBank({
+                discord_id: user.discord_id,
+                bank_no: bankNo,
+                bank_type: bankType,
+            });
+
+            if (fallback.configured) {
+                result = fallback;
+            }
+        }
 
         if (!result.ok) {
-            const missingBackendRoute = !result.configured;
+            const missingBackendRoute = accessToken && result.status === 404 && !result.configured;
+            const missingAuthBridge = !accessToken && !result.configured;
             return NextResponse.json(
                 {
                     error: missingBackendRoute
-                        ? "Frontend bank update flow is ready, but the latest backend does not expose an HTTP bank-update route yet."
+                        ? "The backend currently pointed to by BACKEND_URL does not expose POST /backend/api/v1/add_bank_account, and no fallback bank-update proxy is configured."
+                        : missingAuthBridge
+                        ? "Frontend bank update flow is ready, but this session is missing Discord login and no fallback bank-update proxy is configured."
                         : result.error ?? "bank update failed",
                     configured: result.configured,
                 },

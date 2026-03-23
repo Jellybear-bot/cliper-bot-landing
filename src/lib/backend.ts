@@ -323,6 +323,45 @@ export async function createPayoutRequestWithDiscordToken(input: {
     }
 }
 
+export async function updateClipperBankWithDiscordToken(input: {
+    accessToken: string;
+    bank_no: string;
+    bank_type: string;
+}) {
+    try {
+        const data = await fetchBackendWithDiscordAuth(
+            "/backend/api/v1/add_bank_account",
+            input.accessToken,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    bank_no: input.bank_no,
+                    bank_type: input.bank_type,
+                }),
+            },
+        );
+
+        return {
+            configured: true,
+            ok: true,
+            status: 200,
+            data,
+            error: null,
+        } satisfies BackendMutationResult;
+    } catch (error) {
+        const status = typeof (error as BackendRouteError)?.status === "number"
+            ? (error as BackendRouteError).status as number
+            : 502;
+        return {
+            configured: true,
+            ok: false,
+            status,
+            data: null,
+            error: error instanceof Error ? error.message : "Unable to update bank account",
+        } satisfies BackendMutationResult;
+    }
+}
+
 export async function createSubmission(input: {
     discord_id: string;
     campaign_id: string;
