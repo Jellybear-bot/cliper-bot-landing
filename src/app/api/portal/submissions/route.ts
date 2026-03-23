@@ -50,10 +50,6 @@ export async function POST(request: Request) {
             fetchCampaigns(),
         ]);
 
-        if (!clipper) {
-            return NextResponse.json({ error: "clipper not found" }, { status: 404 });
-        }
-
         const campaign = campaigns.find((item) => item.id === campaignId || item.campaign_name === campaignName);
         if (!campaign) {
             return NextResponse.json({ error: "campaign not found" }, { status: 404 });
