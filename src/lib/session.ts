@@ -1,10 +1,18 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
-import { LEGACY_PORTAL_SESSION_COOKIE, PORTAL_SESSION_COOKIE } from "@/lib/auth-constants";
+import {
+    LEGACY_PORTAL_SESSION_COOKIE,
+    PORTAL_DISCORD_TOKEN_COOKIE,
+    PORTAL_SESSION_COOKIE,
+} from "@/lib/auth-constants";
 
 export interface SessionUser {
     discord_id: string;
     username: string;
+}
+
+interface SignedCookiePayload {
+    v: string;
 }
 
 function getSessionSecret() {
@@ -56,10 +64,36 @@ function decodeLegacySession(token: string) {
     return parseSessionPayload(token);
 }
 
+function createSignedCookieValue(value: string) {
+    const payload = Buffer.from(JSON.stringify({ v: value } satisfies SignedCookiePayload), "utf8").toString("base64url");
+    const signature = signSessionPayload(payload);
+    return `${payload}.${signature}`;
+}
+
+function decodeSignedCookieValue(token: string) {
+    const [payload, signature] = token.split(".");
+    if (!payload || !signature) return null;
+
+    const expected = signSessionPayload(payload);
+    if (!safeCompare(signature, expected)) return null;
+
+    try {
+        const raw = Buffer.from(payload, "base64url").toString("utf8");
+        const parsed = JSON.parse(raw) as SignedCookiePayload;
+        return typeof parsed.v === "string" ? parsed.v : null;
+    } catch {
+        return null;
+    }
+}
+
 export function createSessionToken(user: SessionUser) {
     const payload = Buffer.from(JSON.stringify(user), "utf8").toString("base64url");
     const signature = signSessionPayload(payload);
     return `${payload}.${signature}`;
+}
+
+export function createDiscordAccessTokenCookie(accessToken: string) {
+    return createSignedCookieValue(accessToken);
 }
 
 export function getSessionUser(): SessionUser | null {
@@ -76,6 +110,18 @@ export function getSessionUser(): SessionUser | null {
         }
 
         return null;
+    } catch {
+        return null;
+    }
+}
+
+export function getDiscordAccessToken(): string | null {
+    try {
+        const cookieStore = cookies();
+        const signed = cookieStore.get(PORTAL_DISCORD_TOKEN_COOKIE);
+        if (!signed?.value) return null;
+
+        return decodeSignedCookieValue(signed.value);
     } catch {
         return null;
     }

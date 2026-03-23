@@ -38,9 +38,12 @@ export async function PATCH(request: Request) {
         });
 
         if (!result.ok) {
+            const missingBackendRoute = !result.configured;
             return NextResponse.json(
                 {
-                    error: result.error ?? "bank update failed",
+                    error: missingBackendRoute
+                        ? "Frontend bank update flow is ready, but the latest backend does not expose an HTTP bank-update route yet."
+                        : result.error ?? "bank update failed",
                     configured: result.configured,
                 },
                 { status: result.status || 500 },

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createSubmission, fetchCampaigns, fetchClipperById, fetchSubmissionsByClipper } from "@/lib/backend";
-import { getSessionUser } from "@/lib/session";
+import { createSubmission, createSubmissionWithDiscordToken, fetchCampaigns, fetchClipperById, fetchSubmissionsByClipper } from "@/lib/backend";
+import { getDiscordAccessToken, getSessionUser } from "@/lib/session";
 import { getRoleFromClipper, isVipCampaign } from "@/modules/app-portal/roleConfig";
 
 export async function GET() {
@@ -67,17 +67,27 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "vip access required for this campaign" }, { status: 403 });
         }
 
-        const result = await createSubmission({
-            discord_id: user.discord_id,
-            campaign_id: campaign.id,
-            campaign_name: campaign.campaign_name,
-            video_url: videoUrl,
-        });
+        const accessToken = getDiscordAccessToken();
+        const result = accessToken
+            ? await createSubmissionWithDiscordToken({
+                accessToken,
+                campaign_id: campaign.id,
+                video_url: videoUrl,
+            })
+            : await createSubmission({
+                discord_id: user.discord_id,
+                campaign_id: campaign.id,
+                campaign_name: campaign.campaign_name,
+                video_url: videoUrl,
+            });
 
         if (!result.ok) {
+            const missingAuthBridge = !accessToken && !result.configured;
             return NextResponse.json(
                 {
-                    error: result.error ?? "submission failed",
+                    error: missingAuthBridge
+                        ? "Frontend is ready, but the latest backend submission route requires Discord login and no frontend auth bridge is available for this session yet."
+                        : result.error ?? "submission failed",
                     configured: result.configured,
                 },
                 { status: result.status || 500 },

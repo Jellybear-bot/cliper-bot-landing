@@ -178,21 +178,135 @@ export async function fetchPayoutsByClipper(discordId: string): Promise<PayoutRe
     return res.json();
 }
 
-export function mergeClipperWithPayoutHistory(
+function sortByCreatedAtDesc<T extends { created_at?: string }>(items: T[]) {
+    return [...items].sort((left, right) => {
+        const leftTime = new Date(left.created_at ?? 0).getTime();
+        const rightTime = new Date(right.created_at ?? 0).getTime();
+        return rightTime - leftTime;
+    });
+}
+
+function pickEarliestDate(values: Array<string | undefined>) {
+    const timestamps = values
+        .map((value) => value ? new Date(value).getTime() : NaN)
+        .filter((value) => Number.isFinite(value));
+
+    if (!timestamps.length) return undefined;
+    return new Date(Math.min(...timestamps)).toISOString();
+}
+
+export function enrichClipperProfile(
     clipper: ClipperResponse | null,
     payouts: PayoutResponse[],
+    submissions: SubmissionResponse[] = [],
 ): ClipperResponse | null {
     if (!clipper) return null;
-    if (clipper.bank_no && clipper.bank_type) return clipper;
 
-    const latestBank = payouts.find((payout) => payout.bank_no && payout.bank_type);
-    if (!latestBank) return clipper;
+    const latestBank = sortByCreatedAtDesc(
+        payouts.filter((payout) => payout.bank_no && payout.bank_type),
+    )[0];
+
+    const createdAt = clipper.created_at ?? pickEarliestDate([
+        ...payouts.map((payout) => payout.created_at),
+        ...submissions.map((submission) => submission.created_at),
+    ]);
 
     return {
         ...clipper,
-        bank_no: clipper.bank_no ?? latestBank.bank_no,
-        bank_type: clipper.bank_type ?? latestBank.bank_type,
+        bank_no: clipper.bank_no ?? latestBank?.bank_no,
+        bank_type: clipper.bank_type ?? latestBank?.bank_type,
+        created_at: createdAt,
     };
+}
+
+async function fetchBackendWithDiscordAuth<T>(path: string, accessToken: string, init?: RequestInit): Promise<T> {
+    const res = await fetch(`${BACKEND_URL}${path}`, {
+        ...init,
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            ...(init?.headers ?? {}),
+        },
+        cache: "no-store",
+    });
+
+    const body = await res.json().catch(() => null) as {
+        data?: T;
+        error?: string;
+        message?: string;
+        messageTh?: string;
+    } | null;
+
+    if (!res.ok) {
+        throw new Error(body?.messageTh ?? body?.message ?? body?.error ?? `Request failed with HTTP ${res.status}`);
+    }
+
+    return (body?.data ?? body) as T;
+}
+
+export async function createSubmissionWithDiscordToken(input: {
+    accessToken: string;
+    campaign_id: string;
+    video_url: string;
+}) {
+    try {
+        const data = await fetchBackendWithDiscordAuth(
+            `/backend/api/v1/campaigns/join?campaign_id=${encodeURIComponent(input.campaign_id)}`,
+            input.accessToken,
+            {
+                method: "POST",
+                body: JSON.stringify({ video_url: input.video_url }),
+            },
+        );
+
+        return {
+            configured: true,
+            ok: true,
+            status: 200,
+            data,
+            error: null,
+        } satisfies BackendMutationResult;
+    } catch (error) {
+        return {
+            configured: true,
+            ok: false,
+            status: 502,
+            data: null,
+            error: error instanceof Error ? error.message : "Unable to create submission",
+        } satisfies BackendMutationResult;
+    }
+}
+
+export async function createPayoutRequestWithDiscordToken(input: {
+    accessToken: string;
+    amount: number;
+}) {
+    try {
+        const data = await fetchBackendWithDiscordAuth(
+            "/backend/api/v1/withdraws",
+            input.accessToken,
+            {
+                method: "POST",
+                body: JSON.stringify({ amount: input.amount }),
+            },
+        );
+
+        return {
+            configured: true,
+            ok: true,
+            status: 201,
+            data,
+            error: null,
+        } satisfies BackendMutationResult;
+    } catch (error) {
+        return {
+            configured: true,
+            ok: false,
+            status: 502,
+            data: null,
+            error: error instanceof Error ? error.message : "Unable to create payout request",
+        } satisfies BackendMutationResult;
+    }
 }
 
 export async function createSubmission(input: {

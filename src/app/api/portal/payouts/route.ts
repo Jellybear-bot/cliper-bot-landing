@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createPayoutRequest, fetchClipperById, fetchPayoutsByClipper, mergeClipperWithPayoutHistory } from "@/lib/backend";
-import { getSessionUser } from "@/lib/session";
+import { createPayoutRequest, createPayoutRequestWithDiscordToken, enrichClipperProfile, fetchClipperById, fetchPayoutsByClipper, fetchSubmissionsByClipper } from "@/lib/backend";
+import { getDiscordAccessToken, getSessionUser } from "@/lib/session";
 import { getRoleFromClipper, ROLE_PERMISSIONS } from "@/modules/app-portal/roleConfig";
 
 export async function GET() {
@@ -32,12 +32,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "amount must be a positive number" }, { status: 400 });
         }
 
-        const [rawClipper, payouts] = await Promise.all([
+        const [rawClipper, payouts, submissions] = await Promise.all([
             fetchClipperById(user.discord_id),
             fetchPayoutsByClipper(user.discord_id),
+            fetchSubmissionsByClipper(user.discord_id).catch(() => []),
         ]);
 
-        const clipper = mergeClipperWithPayoutHistory(rawClipper, payouts);
+        const clipper = enrichClipperProfile(rawClipper, payouts, submissions);
 
         if (!clipper) {
             return NextResponse.json({ error: "clipper not found" }, { status: 404 });
@@ -66,17 +67,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "there is already a pending payout request" }, { status: 409 });
         }
 
-        const result = await createPayoutRequest({
-            discord_id: user.discord_id,
-            amount,
-            bank_no: clipper.bank_no,
-            bank_type: clipper.bank_type,
-        });
+        const accessToken = getDiscordAccessToken();
+        const result = accessToken
+            ? await createPayoutRequestWithDiscordToken({
+                accessToken,
+                amount,
+            })
+            : await createPayoutRequest({
+                discord_id: user.discord_id,
+                amount,
+                bank_no: clipper.bank_no,
+                bank_type: clipper.bank_type,
+            });
 
         if (!result.ok) {
+            const missingAuthBridge = !accessToken && !result.configured;
             return NextResponse.json(
                 {
-                    error: result.error ?? "payout request failed",
+                    error: missingAuthBridge
+                        ? "Frontend is ready, but the latest backend payout route requires Discord login and no frontend auth bridge is available for this session yet."
+                        : result.error ?? "payout request failed",
                     configured: result.configured,
                 },
                 { status: result.status || 500 },

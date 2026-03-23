@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchClipperById, fetchPayoutsByClipper, mergeClipperWithPayoutHistory } from "@/lib/backend";
+import { enrichClipperProfile, fetchClipperById, fetchPayoutsByClipper, fetchSubmissionsByClipper } from "@/lib/backend";
 import { getSessionUser } from "@/lib/session";
 
 export async function GET() {
@@ -9,12 +9,13 @@ export async function GET() {
     }
 
     try {
-        const [clipper, payouts] = await Promise.all([
+        const [clipper, payouts, submissions] = await Promise.all([
             fetchClipperById(user.discord_id),
             fetchPayoutsByClipper(user.discord_id).catch(() => []),
+            fetchSubmissionsByClipper(user.discord_id).catch(() => []),
         ]);
 
-        const profile = mergeClipperWithPayoutHistory(clipper, payouts);
+        const profile = enrichClipperProfile(clipper, payouts, submissions);
         if (!profile) {
             return NextResponse.json({ error: "clipper not found" }, { status: 404 });
         }

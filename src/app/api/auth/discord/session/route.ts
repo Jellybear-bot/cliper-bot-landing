@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { LEGACY_PORTAL_SESSION_COOKIE, PORTAL_SESSION_COOKIE } from "@/lib/auth-constants";
-import { createSessionToken, type SessionUser } from "@/lib/session";
+import {
+    LEGACY_PORTAL_SESSION_COOKIE,
+    PORTAL_DISCORD_TOKEN_COOKIE,
+    PORTAL_SESSION_COOKIE,
+} from "@/lib/auth-constants";
+import { createDiscordAccessTokenCookie, createSessionToken, type SessionUser } from "@/lib/session";
 
 export async function POST(request: Request) {
     try {
@@ -41,6 +45,14 @@ export async function POST(request: Request) {
         cookies().set({
             name: PORTAL_SESSION_COOKIE,
             value: createSessionToken(user),
+            httpOnly: true,
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 60 * 60 * 24 * 7,
+        });
+        cookies().set({
+            name: PORTAL_DISCORD_TOKEN_COOKIE,
+            value: createDiscordAccessTokenCookie(accessToken),
             httpOnly: true,
             path: "/",
             secure: process.env.NODE_ENV === "production",
