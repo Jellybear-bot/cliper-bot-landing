@@ -71,8 +71,8 @@ export async function POST(request: Request) {
         if (!accessToken) {
             return NextResponse.json(
                 {
-                    error: "Discord login is required because payout requests are sent to /backend/api/v1/withdraws.",
-                    configured: true,
+                    error: "discord session expired, please sign in again",
+                    configured: false,
                 },
                 { status: 401 },
             );
@@ -84,11 +84,11 @@ export async function POST(request: Request) {
         });
 
         if (!result.ok) {
-            const missingBackendRoute = result.status === 404;
+            const missingBackendRoute = result.status === 404 && !result.configured;
             return NextResponse.json(
                 {
                     error: missingBackendRoute
-                        ? "The backend currently pointed to by BACKEND_URL does not expose POST /backend/api/v1/withdraws."
+                        ? "The backend currently pointed to by BACKEND_URL does not expose POST /backend/api/v1/withdraws, and no fallback payout proxy is configured."
                         : result.error ?? "payout request failed",
                     configured: result.configured,
                 },
