@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         }
 
         const accessToken = getDiscordAccessToken();
-        const result = accessToken
+        let result = accessToken
             ? await createPayoutRequestWithDiscordToken({
                 accessToken,
                 amount,
@@ -80,11 +80,27 @@ export async function POST(request: Request) {
                 bank_type: clipper.bank_type,
             });
 
+        if (accessToken && !result.ok && result.status === 404) {
+            const fallback = await createPayoutRequest({
+                discord_id: user.discord_id,
+                amount,
+                bank_no: clipper.bank_no,
+                bank_type: clipper.bank_type,
+            });
+
+            if (fallback.configured) {
+                result = fallback;
+            }
+        }
+
         if (!result.ok) {
             const missingAuthBridge = !accessToken && !result.configured;
+            const missingBackendRoute = accessToken && result.status === 404 && !result.configured;
             return NextResponse.json(
                 {
-                    error: missingAuthBridge
+                    error: missingBackendRoute
+                        ? "The backend currently pointed to by BACKEND_URL does not expose POST /backend/api/v1/withdraws, and no fallback payout proxy is configured."
+                        : missingAuthBridge
                         ? "Frontend is ready, but the latest backend payout route requires Discord login and no frontend auth bridge is available for this session yet."
                         : result.error ?? "payout request failed",
                     configured: result.configured,

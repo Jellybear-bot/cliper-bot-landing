@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         }
 
         const accessToken = getDiscordAccessToken();
-        const result = accessToken
+        let result = accessToken
             ? await createSubmissionWithDiscordToken({
                 accessToken,
                 campaign_id: campaign.id,
@@ -81,11 +81,27 @@ export async function POST(request: Request) {
                 video_url: videoUrl,
             });
 
+        if (accessToken && !result.ok && result.status === 404) {
+            const fallback = await createSubmission({
+                discord_id: user.discord_id,
+                campaign_id: campaign.id,
+                campaign_name: campaign.campaign_name,
+                video_url: videoUrl,
+            });
+
+            if (fallback.configured) {
+                result = fallback;
+            }
+        }
+
         if (!result.ok) {
             const missingAuthBridge = !accessToken && !result.configured;
+            const missingBackendRoute = accessToken && result.status === 404 && !result.configured;
             return NextResponse.json(
                 {
-                    error: missingAuthBridge
+                    error: missingBackendRoute
+                        ? "The backend currently pointed to by BACKEND_URL does not expose POST /backend/api/v1/campaigns/join, and no fallback submission proxy is configured."
+                        : missingAuthBridge
                         ? "Frontend is ready, but the latest backend submission route requires Discord login and no frontend auth bridge is available for this session yet."
                         : result.error ?? "submission failed",
                     configured: result.configured,

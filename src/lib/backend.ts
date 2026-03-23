@@ -25,6 +25,10 @@ export interface BackendMutationResult<T = unknown> {
     error: string | null;
 }
 
+interface BackendRouteError extends Error {
+    status?: number;
+}
+
 async function proxyConfiguredMutation<T>(
     url: string | undefined,
     method: "POST" | "PATCH" | "PUT",
@@ -238,7 +242,11 @@ async function fetchBackendWithDiscordAuth<T>(path: string, accessToken: string,
     } | null;
 
     if (!res.ok) {
-        throw new Error(body?.messageTh ?? body?.message ?? body?.error ?? `Request failed with HTTP ${res.status}`);
+        const error = new Error(
+            body?.messageTh ?? body?.message ?? body?.error ?? `Request failed with HTTP ${res.status}`,
+        ) as BackendRouteError;
+        error.status = res.status;
+        throw error;
     }
 
     return (body?.data ?? body) as T;
@@ -267,10 +275,13 @@ export async function createSubmissionWithDiscordToken(input: {
             error: null,
         } satisfies BackendMutationResult;
     } catch (error) {
+        const status = typeof (error as BackendRouteError)?.status === "number"
+            ? (error as BackendRouteError).status as number
+            : 502;
         return {
             configured: true,
             ok: false,
-            status: 502,
+            status,
             data: null,
             error: error instanceof Error ? error.message : "Unable to create submission",
         } satisfies BackendMutationResult;
@@ -299,10 +310,13 @@ export async function createPayoutRequestWithDiscordToken(input: {
             error: null,
         } satisfies BackendMutationResult;
     } catch (error) {
+        const status = typeof (error as BackendRouteError)?.status === "number"
+            ? (error as BackendRouteError).status as number
+            : 502;
         return {
             configured: true,
             ok: false,
-            status: 502,
+            status,
             data: null,
             error: error instanceof Error ? error.message : "Unable to create payout request",
         } satisfies BackendMutationResult;
