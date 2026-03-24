@@ -32,6 +32,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "amount must be a positive number" }, { status: 400 });
         }
 
+        if (!Number.isInteger(amount)) {
+            return NextResponse.json({ error: "amount must be a whole number" }, { status: 400 });
+        }
+
         const [rawClipper, payouts, submissions] = await Promise.all([
             fetchClipperById(user.discord_id),
             fetchPayoutsByClipper(user.discord_id),
@@ -53,10 +57,6 @@ export async function POST(request: Request) {
 
         if (amount < permissions.minWithdrawAmount) {
             return NextResponse.json({ error: `minimum withdraw amount is ${permissions.minWithdrawAmount}` }, { status: 400 });
-        }
-
-        if (amount % 100 !== 0) {
-            return NextResponse.json({ error: "amount must be a multiple of 100" }, { status: 400 });
         }
 
         if (amount > clipper.pending_balance) {

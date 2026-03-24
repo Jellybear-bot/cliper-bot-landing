@@ -64,8 +64,10 @@ export function WithdrawPage() {
 
     const pendingBalance = clipperData?.pending_balance ?? 0;
     const parsedAmount = parseInt(amount, 10);
+    const numericAmount = Number(amount);
     const minWithdrawAmount = rolePermissions.minWithdrawAmount;
-    const isValidAmount = !isNaN(parsedAmount) && parsedAmount >= minWithdrawAmount && parsedAmount % 100 === 0 && parsedAmount <= pendingBalance;
+    const isIntegerAmount = amount.trim() !== "" && Number.isInteger(numericAmount);
+    const isValidAmount = isIntegerAmount && parsedAmount >= minWithdrawAmount && parsedAmount <= pendingBalance;
 
     const hasPendingRequest = payoutData.some((payout: PayoutResponse) => payout.status.includes("⏳"));
 
@@ -79,9 +81,8 @@ export function WithdrawPage() {
 
     const validationMessage = () => {
         if (!amount) return null;
-        if (isNaN(parsedAmount) || parsedAmount <= 0) return { type: "error", text: w.validation.invalid };
+        if (!Number.isFinite(numericAmount) || numericAmount <= 0 || !Number.isInteger(numericAmount)) return { type: "error", text: w.validation.invalid };
         if (parsedAmount < minWithdrawAmount) return { type: "error", text: `ขั้นต่ำ ${fmt(minWithdrawAmount)} บาท` };
-        if (parsedAmount % 100 !== 0) return { type: "error", text: w.validation.multiple };
         if (parsedAmount > pendingBalance) return { type: "error", text: w.validation.insufficient };
         return {
             type: "ok",
@@ -192,7 +193,7 @@ export function WithdrawPage() {
                                         </button>
                                     ))}
                                     <button type="button"
-                                        onClick={() => setAmount(String(Math.floor(pendingBalance / 100) * 100))}
+                                        onClick={() => setAmount(String(Math.floor(pendingBalance)))}
                                         disabled={pendingBalance < 100}
                                         className="px-4 py-2 rounded-xl text-sm font-bold border bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all">
                                         {w.max}
@@ -205,7 +206,7 @@ export function WithdrawPage() {
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">฿</span>
                                     <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
-                                        min={minWithdrawAmount} step={100} max={pendingBalance} placeholder="0"
+                                        min={minWithdrawAmount} step={1} max={Math.floor(pendingBalance)} placeholder="0"
                                         className="w-full pl-8 pr-4 py-3.5 text-xl font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                                 </div>
                                 <AnimatePresence>

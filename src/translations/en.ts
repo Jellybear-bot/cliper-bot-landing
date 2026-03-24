@@ -312,7 +312,7 @@ export const en = {
             title: "Withdraw Earnings",
             subtitle: "Request a payout to your registered bank account.",
             availableBalance: "Available Balance",
-            minNote: "Min. ฿100 · Multiples of ฿100 only",
+            minNote: "Min. ฿100 · Whole numbers only",
             totalEarned: "Total Earned",
             totalPaidOut: "Total Paid Out",
             pendingWarningTitle: "You have a pending withdrawal request",
@@ -325,7 +325,7 @@ export const en = {
             rulesTitle: "Withdrawal Rules",
             rules: [
                 "Minimum withdrawal: ฿100",
-                "Must be multiples of ฿100",
+                "Amount must be a whole number",
                 "Only one pending request at a time",
                 "Bank account must be registered",
                 "Admin approval within 24 hours",
@@ -338,7 +338,7 @@ export const en = {
             validation: {
                 invalid: "Please enter a valid amount",
                 minAmount: "Minimum withdrawal is ฿100",
-                multiple: "Amount must be a multiple of ฿100",
+                multiple: "Amount must be a whole number",
                 insufficient: "Insufficient balance",
                 ok: "Will transfer ฿{amount} to {bank} ({no})",
             },
