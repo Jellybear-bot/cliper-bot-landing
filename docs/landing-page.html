@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CrowdClip Media | Performance Short-Form Marketing</title>
+  <meta name="description" content="การตลาดวิดีโอสั้นเน้นผลลัพธ์ จ่ายเฉพาะยอดวิวจริง กระจายคอนเทนต์ผ่านเครือข่ายครีเอเตอร์กว่า 100+ คน" />
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #dbe3ef;
+      --paper: #ffffff;
+      --soft: #f6f8fb;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --green: #059669;
+      --rose: #e11d48;
+      --night: #080d18;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--soft);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .container {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(219, 227, 239, 0.8);
+    }
+
+    .nav-inner {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, #111827, #2563eb);
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: white; background: var(--blue); box-shadow: 0 16px 34px rgba(37, 99, 235, 0.28); }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-secondary { color: var(--ink); background: white; border: 1px solid var(--line); box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06); }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 86px 0 64px;
+      background:
+        radial-gradient(circle at 78% 12%, rgba(37, 99, 235, 0.14), transparent 32%),
+        linear-gradient(180deg, #f8fbff 0%, #eef4ff 58%, #ffffff 100%);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(420px, 0.98fr);
+      gap: 48px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #1d4ed8;
+      background: white;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-size: 13px;
+      font-weight: 850;
+      box-shadow: 0 8px 22px rgba(37, 99, 235, 0.09);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--blue);
+      box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin: 22px 0 20px;
+      font-size: clamp(42px, 6vw, 74px);
+      line-height: 1.04;
+      letter-spacing: 0;
+      font-weight: 950;
+    }
+
+    .blue-text { color: var(--blue); }
+    .hero-copy {
+      max-width: 660px;
+      color: #475569;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 34px;
+    }
+
+    .metric {
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .metric strong { display: block; font-size: 24px; line-height: 1; }
+    .metric span { color: var(--muted); font-size: 13px; font-weight: 700; }
+
+    .dashboard {
+      background: #0f172a;
+      border-radius: 22px;
+      padding: 18px;
+      color: white;
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .dash-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+
+    .dash-title { font-weight: 900; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #86efac;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .panel.wide { grid-column: span 2; }
+    .panel-label { color: #94a3b8; font-size: 12px; font-weight: 800; }
+    .panel-value { font-size: 26px; font-weight: 950; margin-top: 3px; }
+    .bar { height: 9px; background: rgba(148, 163, 184, 0.22); border-radius: 999px; overflow: hidden; margin-top: 12px; }
+    .bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #60a5fa, #34d399); }
+    .clip-list { display: grid; gap: 8px; margin-top: 12px; }
+    .clip { display: flex; justify-content: space-between; gap: 10px; color: #dbeafe; font-size: 13px; font-weight: 700; }
+
+    section { padding: 80px 0; }
+    .section-title { text-align: center; margin-bottom: 40px; }
+    .section-title h2 {
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.12;
+      margin-bottom: 12px;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+    .section-title p { max-width: 680px; margin: 0 auto; color: var(--muted); font-weight: 650; }
+
+    .trust {
+      padding: 28px 0;
+      background: white;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .trust-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      color: #64748b;
+      font-weight: 850;
+    }
+
+    .logo-box {
+      height: 38px;
+      min-width: 120px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+    }
+
+    .danger { background: #fff6f7; border-color: #fecdd3; }
+    .success { background: #f2f8ff; border-color: #bfdbfe; }
+    .card h3 { font-size: 23px; line-height: 1.25; margin-bottom: 18px; }
+    .danger h3 { color: var(--rose); }
+    .success h3 { color: var(--blue-dark); }
+    .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+    .list li { display: flex; gap: 10px; color: #334155; font-weight: 650; }
+    .mark { flex: 0 0 auto; font-weight: 950; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .step-num {
+      color: #cbd5e1;
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 950;
+      margin-bottom: 16px;
+    }
+
+    .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: #eff6ff;
+      color: var(--blue);
+      font-weight: 950;
+      margin-bottom: 16px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .price-card { position: relative; display: flex; flex-direction: column; }
+    .price-card.featured {
+      border: 2px solid var(--blue);
+      box-shadow: 0 22px 48px rgba(37, 99, 235, 0.16);
+      transform: translateY(-10px);
+    }
+
+    .badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--blue);
+      color: white;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .views { font-size: 38px; line-height: 1; font-weight: 950; margin: 10px 0; }
+    .price { color: var(--blue); font-size: 24px; font-weight: 950; margin-bottom: 12px; }
+    .price-card p { color: var(--muted); font-weight: 650; min-height: 70px; }
+    .price-card .btn { margin-top: auto; width: 100%; }
+
+    .inquiry {
+      background: linear-gradient(180deg, #0f172a 0%, #070b12 100%);
+      color: white;
+    }
+
+    .inquiry-grid {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 34px;
+      align-items: start;
+    }
+
+    .inquiry h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.14; margin: 14px 0; }
+    .inquiry p, .inquiry li { color: #cbd5e1; font-weight: 650; }
+    .inquiry-form {
+      background: white;
+      color: var(--ink);
+      border-radius: 18px;
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+    }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .form-grid.three { grid-template-columns: repeat(3, 1fr); }
+    label { display: block; color: #64748b; font-size: 11px; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f8fafc;
+      color: var(--ink);
+      padding: 11px 12px;
+      outline: none;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .faq-card h3 { font-size: 18px; margin-bottom: 8px; }
+    .faq-card p { color: var(--muted); margin-bottom: 0; font-weight: 650; }
+
+    .final {
+      text-align: center;
+      color: white;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.25), transparent 36%),
+        var(--night);
+    }
+    .final h2 { font-size: clamp(34px, 5vw, 56px); line-height: 1.08; margin-bottom: 16px; }
+    .final p { color: #cbd5e1; max-width: 680px; margin: 0 auto 26px; font-weight: 650; }
+
+    footer {
+      padding: 38px 0;
+      color: #94a3b8;
+      background: #05070d;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .footer-row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+    @media (max-width: 920px) {
+      .nav-links { display: none; }
+      .hero-grid, .comparison, .steps, .pricing-grid, .inquiry-grid, .faq-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-grid { gap: 32px; }
+      .price-card.featured { transform: none; }
+      .dashboard { max-width: 620px; margin: 0 auto; }
+    }
+
+    @media (max-width: 620px) {
+      .container { width: min(100% - 24px, 1120px); }
+      .hero { padding-top: 56px; }
+      .hero-actions .btn { width: 100%; }
+      .metric-row, .form-grid, .form-grid.three, .dash-grid { grid-template-columns: 1fr; }
+      .panel.wide { grid-column: span 1; }
+      section { padding: 58px 0; }
+      .card { padding: 20px; }
+      .views { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#">
+        <span class="brand-mark">CC</span>
+        <span>CrowdClip Media</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#services">บริการของเรา</a>
+        <a href="#pricing">ราคา</a>
+        <a href="#brands">สำหรับแบรนด์</a>
+        <a href="#creators">สำหรับครีเอเตอร์</a>
+      </nav>
+      <a class="btn btn-primary" href="#brands">ติดต่อเรา</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="eyebrow"><span class="dot"></span> การันตีผลลัพธ์สำหรับ B2B & ครีเอเตอร์</span>
+          <h1>ก้าวข้ามอัลกอริทึมด้วย <span class="blue-text">Ant Power</span></h1>
+          <p class="hero-copy">
+            การตลาดวิดีโอสั้นเน้นผลลัพธ์ จ่ายเฉพาะยอดวิวจริง การันตี 1 ล้านวิว เครือข่ายครีเอเตอร์กว่า 100+ คนที่พร้อมตัดต่อและกระจายคอนเทนต์ของคุณบน TikTok, Shorts, และ Reels
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#brands">ปรึกษาแคมเปญฟรี</a>
+            <a class="btn btn-secondary" href="#how-it-works">ดูวิธีการทำงาน</a>
+          </div>
+          <div class="metric-row" aria-label="Campaign metrics">
+            <div class="metric"><strong>100+</strong><span>ครีเอเตอร์พร้อมโพสต์</span></div>
+            <div class="metric"><strong>1M</strong><span>แพ็กเกจยอดนิยม</span></div>
+            <div class="metric"><strong>3</strong><span>แพลตฟอร์มวิดีโอสั้น</span></div>
+          </div>
+        </div>
+
+        <div class="dashboard" aria-label="Campaign dashboard preview">
+          <div class="dash-top">
+            <div>
+              <div class="panel-label">Campaign Command Center</div>
+              <div class="dash-title">Launch: Summer Drop</div>
+            </div>
+            <span class="pill">กำลังได้วิว</span>
+          </div>
+          <div class="dash-grid">
+            <div class="panel">
+              <div class="panel-label">ยอดวิวรวม</div>
+              <div class="panel-value">812K</div>
+              <div class="bar"><span style="width:81%"></span></div>
+            </div>
+            <div class="panel">
+              <div class="panel-label">ครีเอเตอร์ที่โพสต์</div>
+              <div class="panel-value">86</div>
+              <div class="bar"><span style="width:72%"></span></div>
+            </div>
+            <div class="panel wide">
+              <div class="panel-label">คลิปล่าสุด</div>
+              <div class="clip-list">
+                <div class="clip"><span>TikTok remix hook A</span><span>142K views</span></div>
+                <div class="clip"><span>YouTube Shorts demo cut</span><span>97K views</span></div>
+                <div class="clip"><span>Reels reaction format</span><span>64K views</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="trust">
+      <div class="container trust-row">
+        <span>แบรนด์ที่ไว้วางใจเรา</span>
+        <span class="logo-box">Brand Logo</span>
+        <span class="logo-box">Brand Logo</span>
+        <span class="logo-box">Brand Logo</span>
+        <span class="logo-box">Brand Logo</span>
+      </div>
+    </div>
+
+    <section id="services">
+      <div class="container">
+        <div class="section-title">
+          <h2>ทำไมต้อง CrowdClip Media?</h2>
+          <p>หยุดใช้บประมาณกับแคมเปญที่คาดเดาไม่ได้ เปลี่ยนมาใช้โมเดลรับประกันผลลัพธ์ดีกว่า</p>
+        </div>
+        <div class="comparison">
+          <article class="card danger">
+            <h3>การตลาดแบบอินฟลูเอนเซอร์ทั่วไป</h3>
+            <ul class="list">
+              <li><span class="mark">✕</span><span>ต้นทุนเริ่มต้นสูง โดยไม่มีการรับประกัน ROI หรือยอดวิว</span></li>
+              <li><span class="mark">✕</span><span>มีแค่วิดีโอเดียว หากอัลกอริทึมไม่ดัน แคมเปญก็ล้มเหลว</span></li>
+              <li><span class="mark">✕</span><span>คาดเดาการเข้าถึงไม่ได้ ขึ้นอยู่กับอัตราการมีส่วนร่วมของครีเอเตอร์ในขณะนั้น</span></li>
+            </ul>
+          </article>
+          <article class="card success">
+            <h3>โมเดล CrowdClip (พลังมด)</h3>
+            <ul class="list">
+              <li><span class="mark">✓</span><span>คุ้มค่า: จ่ายเฉพาะยอดวิวจริง ไม่มีความเสี่ยงเรื่องงบประมาณ</span></li>
+              <li><span class="mark">✓</span><span>100+ วิดีโอพร้อมกัน: ยึดครองหน้าฟีดผ่านหลายบัญชี</span></li>
+              <li><span class="mark">✓</span><span>รับประกันยอดวิวขั้นต่ำ 1 ล้านครั้ง สำหรับแพ็กเกจยอดนิยม</span></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works" style="background:#fff">
+      <div class="container">
+        <div class="section-title">
+          <h2>วิธีการทำงาน</h2>
+          <p>การสร้างกระแสบนโลกออนไลน์ไม่เคยเป็นระบบขนาดนี้มาก่อน เพียง 3 ขั้นตอนง่ายๆ</p>
+        </div>
+        <div class="steps">
+          <article class="card">
+            <div class="step-num">01</div>
+            <div class="icon">↑</div>
+            <h3>ส่งวิดีโอหลัก/บรีฟของคุณมาให้เรา</h3>
+            <p>ส่งคอนเทนต์หลักหรือบรีฟที่ชัดเจน เราดูแลเรื่องกลยุทธ์และการเตรียมข้อมูลให้</p>
+          </article>
+          <article class="card">
+            <div class="step-num">02</div>
+            <div class="icon">◎</div>
+            <h3>ครีเอเตอร์ตัดต่อและกระจายผลงาน</h3>
+            <p>ครีเอเตอร์มืออาชีพกว่า 100+ คนจะรีมิกซ์ ตัดต่อ และโพสต์วิดีโอข้ามแพลตฟอร์ม</p>
+          </article>
+          <article class="card">
+            <div class="step-num">03</div>
+            <div class="icon">↗</div>
+            <h3>ติดตามผล & เป็นกระแสไวรัล</h3>
+            <p>ติดตามยอดวิวแบบเรียลไทม์ผ่านแดชบอร์ด ดูแบรนด์ของคุณครองอัลกอริทึมได้ง่ายขึ้น</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="container">
+        <div class="section-title">
+          <h2>แพ็กเกจของเรา</h2>
+          <p>ราคาโปร่งใส จ่ายตามผลลัพธ์ที่การันตี</p>
+        </div>
+        <div class="pricing-grid">
+          <article class="card price-card">
+            <h3>Starter</h3>
+            <div class="views">500k วิว</div>
+            <div class="price">THB 18,000</div>
+            <p>เหมาะสำหรับทดลองตลาดและสร้างการรับรู้ให้แบรนด์ในเบื้องต้น</p>
+            <ul class="list">
+              <li><span class="mark">✓</span><span>กระจายให้ครีเอเตอร์ 30+ คน</span></li>
+              <li><span class="mark">✓</span><span>โพสต์ข้ามแพลตฟอร์ม</span></li>
+              <li><span class="mark">✓</span><span>รายงานผลแคมเปญเบื้องต้น</span></li>
+              <li><span class="mark">✓</span><span>ระยะเวลาแคมเปญ 7 วัน</span></li>
+            </ul>
+            <a class="btn btn-secondary" href="#brands">เริ่มแคมเปญ</a>
+          </article>
+          <article class="card price-card featured">
+            <span class="badge">ขายดีที่สุด</span>
+            <h3>The Million Impact</h3>
+            <div class="views">1M วิว</div>
+            <div class="price">THB 30,000</div>
+            <p>แพ็กเกจขายดีที่สุด การันตีสร้างแรงกระเพื่อมในอัลกอริทึมอย่างแน่นอน</p>
+            <ul class="list">
+              <li><span class="mark">✓</span><span>กระจายให้ครีเอเตอร์ 100+ คน</span></li>
+              <li><span class="mark">✓</span><span>ปรับแต่ง Hook ให้ไวรัล</span></li>
+              <li><span class="mark">✓</span><span>เข้าถึงแดชบอร์ดเรียลไทม์</span></li>
+              <li><span class="mark">✓</span><span>ผู้จัดการแคมเปญส่วนตัว</span></li>
+              <li><span class="mark">✓</span><span>ระยะเวลาแคมเปญ 14 วัน</span></li>
+            </ul>
+            <a class="btn btn-primary" href="#brands">เริ่มแคมเปญ</a>
+          </article>
+          <article class="card price-card">
+            <h3>Market Domination</h3>
+            <div class="views">5M วิว</div>
+            <div class="price">THB 120,000</div>
+            <p>สำหรับแบรนด์ใหญ่ที่ต้องการยึดครองหน้าฟีดทั้งหมด</p>
+            <ul class="list">
+              <li><span class="mark">✓</span><span>ให้ความสำคัญกับครีเอเตอร์ระดับท็อป</span></li>
+              <li><span class="mark">✓</span><span>เทมเพลตตัดต่อแบบกำหนดเอง</span></li>
+              <li><span class="mark">✓</span><span>วิเคราะห์ข้อมูลขั้นสูง & ติดตาม ROI</span></li>
+              <li><span class="mark">✓</span><span>จัดการเรื่องลิขสิทธิ์ทั้งหมด</span></li>
+              <li><span class="mark">✓</span><span>ระยะเวลาแคมเปญ 30 วัน</span></li>
+            </ul>
+            <a class="btn btn-secondary" href="#brands">เริ่มแคมเปญ</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="brands" class="inquiry">
+      <div class="container inquiry-grid">
+        <div>
+          <span class="eyebrow" style="background:rgba(37,99,235,.14);color:#bfdbfe;border-color:rgba(147,197,253,.28)">สำหรับแบรนด์ที่ต้องการจ้างงาน</span>
+          <h2>บอกความต้องการแคมเปญของคุณ</h2>
+          <p>กรอกข้อมูลสั้นๆ เพื่อให้ทีมเราประเมินแผนแคมเปญและติดต่อกลับได้เร็วที่สุด</p>
+          <ul>
+            <li>วางแผนงบประมาณและเป้าหมายให้เหมาะกับแบรนด์</li>
+            <li>ประเมินจำนวนคลิปและระยะเวลาแคมเปญ</li>
+            <li>ได้รับคำแนะนำจากทีมภายใน 24 ชั่วโมง</li>
+          </ul>
+        </div>
+
+        <form class="inquiry-form">
+          <div class="form-grid">
+            <div><label>ชื่อ</label><input type="text" /></div>
+            <div><label>นามสกุล</label><input type="text" /></div>
+          </div>
+          <div class="form-grid">
+            <div><label>ชื่อบริษัท</label><input type="text" /></div>
+            <div><label>ชื่อแบรนด์</label><input type="text" /></div>
+          </div>
+          <div class="form-grid">
+            <div><label>อีเมล</label><input type="email" /></div>
+            <div><label>เบอร์โทร</label><input type="tel" /></div>
+          </div>
+          <div class="form-grid three">
+            <div>
+              <label>เป้าหมาย</label>
+              <select><option>สร้างการรับรู้แบรนด์</option><option>เพิ่มยอดขาย</option><option>เปิดตัวสินค้าใหม่</option></select>
+            </div>
+            <div>
+              <label>งบประมาณ</label>
+              <select><option>50,000 - 100,000 บาท</option><option>ต่ำกว่า 50,000 บาท</option><option>มากกว่า 100,000 บาท</option></select>
+            </div>
+            <div>
+              <label>ช่วงเวลาที่ต้องการเริ่ม</label>
+              <select><option>ภายในเดือนนี้</option><option>ภายในสัปดาห์นี้</option><option>เดือนถัดไป</option></select>
+            </div>
+          </div>
+          <div>
+            <label>รายละเอียดเพิ่มเติม</label>
+            <textarea placeholder="เช่น สินค้าที่ต้องการโปรโมต กลุ่มเป้าหมาย แพลตฟอร์มที่เน้น"></textarea>
+          </div>
+          <button class="btn btn-primary" type="button">ส่งข้อมูลให้ทีมงาน</button>
+        </form>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-title">
+          <h2>คำถามที่พบบ่อย</h2>
+          <p>ทุกสิ่งที่คุณจำเป็นต้องรู้เกี่ยวกับโมเดลเน้นผลลัพธ์</p>
+        </div>
+        <div class="faq-grid">
+          <article class="card faq-card">
+            <h3>ยอดวิวมาจากคนจริงๆ ใช่ไหม?</h3>
+            <p>ใช่ เครือข่ายครีเอเตอร์ของเราโพสต์ในบัญชีของพวกเขาเอง ยอดวิวเกิดจากอัลกอริทึมของแพลตฟอร์มและผู้ใช้งานจริง</p>
+          </article>
+          <article class="card faq-card">
+            <h3>มีความเสี่ยงเรื่องความปลอดภัยของแบรนด์หรือลิขสิทธิ์หรือไม่?</h3>
+            <p>ก่อนเริ่มแคมเปญ คุณจะเป็นผู้อนุมัติเนื้อหาทั้งหมด และทีมช่วยดูเรื่องสิทธิ์การใช้งานคอนเทนต์</p>
+          </article>
+          <article class="card faq-card">
+            <h3>ถ้าแคมเปญไม่ถึงเป้าหมายการันตียอดวิวล่ะ?</h3>
+            <p>เราจะให้เครือข่ายช่วยโพสต์ต่อแบบไม่คิดค่าใช้จ่ายเพิ่มเติม จนกว่าจะถึงยอดวิวที่ตกลงกันไว้</p>
+          </article>
+          <article class="card faq-card">
+            <h3>ฉันสามารถเลือกครีเอเตอร์ได้ไหม?</h3>
+            <p>ทีมจะจับคู่คอนเทนต์กับครีเอเตอร์ที่เกี่ยวข้องที่สุด โดยดูจากกลุ่มผู้ชมและผลงานที่ผ่านมาเพื่อผลลัพธ์ที่ดี</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="final">
+      <div class="container">
+        <h2>พร้อมที่จะยึดครอง<br><span class="blue-text">อัลกอริทึมหรือยัง?</span></h2>
+        <p>เลิกเดาสุ่ม เริ่มเติบโต! เริ่มต้นแคมเปญเน้นผลลัพธ์แรกของคุณกับ CrowdClip Media ได้แล้ววันนี้</p>
+        <a class="btn btn-primary" href="#brands">เริ่มแคมเปญแรกของคุณ</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-row">
+      <span>ห้างหุ้นส่วนจำกัด คราวด์คลิป มีเดีย</span>
+      <span>ลิขสิทธิ์ © 2026 CrowdClip Media สงวนลิขสิทธิ์</span>
+    </div>
+  </footer>
+</body>
+</html>

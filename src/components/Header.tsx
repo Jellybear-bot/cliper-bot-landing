@@ -1,84 +1,170 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Globe } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, Globe, Moon, Sun } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const { language, setLanguage, t } = useLanguage();
+    const { isDark, toggle } = useTheme();
 
     return (
-        <header className="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <header className="lg-nav fixed w-full top-0 z-50 border-b transition-colors duration-300">
             <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold text-white shadow-sm">C</div>
-                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">CrowdClip Media</span>
+                {/* Brand */}
+                <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/25">
+                        C
+                    </div>
+                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-500">
+                        CrowdClip Media
+                    </span>
                 </div>
 
+                {/* Desktop nav */}
                 <nav className="hidden md:flex items-center gap-8">
-                    <a href="#services" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.services}</a>
-                    <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.pricing}</a>
-                    <a href="#brands" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.brands}</a>
-                    <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{t.header.creators}</Link>
+                    {[
+                        { label: t.header.services, href: '#services' },
+                        { label: t.header.pricing,  href: '#pricing'  },
+                        { label: t.header.brands,   href: '#brands'   },
+                    ].map(link => (
+                        <a
+                            key={link.href}
+                            href={link.href}
+                            className="text-sm font-medium transition-colors text-secondary hover:text-accent"
+                        >
+                            {link.label}
+                        </a>
+                    ))}
+                    <Link href="/login" className="text-sm font-medium transition-colors text-secondary hover:text-accent">
+                        {t.header.creators}
+                    </Link>
                 </nav>
 
-                <div className="hidden md:flex items-center gap-4">
-                    <div className="flex items-center gap-1 bg-slate-100 rounded-full px-2 py-1 border border-slate-200">
-                        <Globe className="w-4 h-4 text-slate-500 ml-1" />
-                        <button
-                            onClick={() => setLanguage('th')}
-                            className={`text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors ${language === 'th' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            TH
-                        </button>
-                        <button
-                            onClick={() => setLanguage('en')}
-                            className={`text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors ${language === 'en' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            EN
-                        </button>
+                {/* Actions */}
+                <div className="hidden md:flex items-center gap-3">
+                    {/* Language switcher */}
+                    <div className="flex items-center gap-1 rounded-full px-2 py-1 border transition-colors
+                        bg-white/30 dark:bg-white/6 border-white/50 dark:border-white/12 backdrop-blur-md">
+                        <Globe className="w-3.5 h-3.5 text-muted-lg ml-1" />
+                        {(['th', 'en'] as const).map(lang => (
+                            <button
+                                key={lang}
+                                onClick={() => setLanguage(lang)}
+                                className={`text-xs font-bold px-2.5 py-1.5 rounded-full transition-all ${
+                                    language === lang
+                                        ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm'
+                                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                            >
+                                {lang.toUpperCase()}
+                            </button>
+                        ))}
                     </div>
-                    <Link href="/login" className="px-6 py-2.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-sm font-semibold hover:bg-indigo-100 transition-colors">
+
+                    {/* Dark mode toggle */}
+                    <button
+                        onClick={toggle}
+                        className="w-9 h-9 rounded-full flex items-center justify-center transition-all
+                            bg-white/30 dark:bg-white/8 border border-white/50 dark:border-white/14 backdrop-blur-md
+                            hover:bg-white/60 dark:hover:bg-white/14"
+                        title={isDark ? 'Light mode' : 'Dark mode'}
+                    >
+                        {isDark
+                            ? <Sun  className="w-4 h-4 text-amber-400" />
+                            : <Moon className="w-4 h-4 text-slate-500" />
+                        }
+                    </button>
+
+                    <Link
+                        href="/login"
+                        className="px-5 py-2 rounded-full text-sm font-semibold transition-all
+                            bg-white/40 dark:bg-white/8 text-blue-600 dark:text-blue-400
+                            border border-blue-200/60 dark:border-blue-500/25 backdrop-blur-md
+                            hover:bg-blue-50 dark:hover:bg-blue-500/15"
+                    >
                         Login
                     </Link>
-                    <a href="https://discord.gg/9WE9sGyZ" target="_blank" rel="noopener noreferrer" className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm">
+                    <a
+                        href="https://discord.gg/9WE9sGyZ"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-2 rounded-full text-sm font-semibold transition-all lg-btn-primary"
+                    >
                         {t.header.bookDemo}
                     </a>
                 </div>
 
-                <button className="md:hidden text-slate-900" onClick={() => setIsOpen(!isOpen)}>
-                    {isOpen ? <X /> : <Menu />}
-                </button>
+                {/* Mobile: theme toggle + hamburger */}
+                <div className="flex md:hidden items-center gap-2">
+                    <button
+                        onClick={toggle}
+                        className="w-9 h-9 rounded-full flex items-center justify-center
+                            bg-white/30 dark:bg-white/8 border border-white/50 dark:border-white/14"
+                    >
+                        {isDark
+                            ? <Sun  className="w-4 h-4 text-amber-400" />
+                            : <Moon className="w-4 h-4 text-slate-500" />
+                        }
+                    </button>
+                    <button
+                        className="w-9 h-9 rounded-full flex items-center justify-center
+                            bg-white/30 dark:bg-white/8 border border-white/50 dark:border-white/14 text-primary"
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
+                </div>
             </div>
 
-            {/* Mobile Menu */}
+            {/* Mobile menu */}
             {isOpen && (
-                <div className="md:hidden bg-white border-b border-slate-200 p-6 flex flex-col gap-4 relative z-40 shadow-lg">
-                    <div className="flex items-center gap-2 bg-slate-100 rounded-full px-3 py-2 border border-slate-200 self-start mb-2">
-                        <Globe className="w-4 h-4 text-slate-500" />
-                        <button
-                            onClick={() => { setLanguage('th'); setIsOpen(false); }}
-                            className={`text-sm font-bold px-3 py-1.5 rounded-full transition-colors ${language === 'th' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            TH
-                        </button>
-                        <button
-                            onClick={() => { setLanguage('en'); setIsOpen(false); }}
-                            className={`text-sm font-bold px-3 py-1.5 rounded-full transition-colors ${language === 'en' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            EN
-                        </button>
+                <div className="md:hidden border-b p-6 flex flex-col gap-4 lg-nav">
+                    <div className="flex items-center gap-1.5 rounded-full px-2 py-1 border self-start
+                        bg-white/30 dark:bg-white/6 border-white/50 dark:border-white/12">
+                        <Globe className="w-3.5 h-3.5 text-muted-lg" />
+                        {(['th', 'en'] as const).map(lang => (
+                            <button
+                                key={lang}
+                                onClick={() => { setLanguage(lang); setIsOpen(false); }}
+                                className={`text-sm font-bold px-3 py-1 rounded-full transition-all ${
+                                    language === lang
+                                        ? 'bg-white dark:bg-white/15 text-slate-900 dark:text-white shadow-sm'
+                                        : 'text-slate-400 dark:text-slate-500'
+                                }`}
+                            >
+                                {lang.toUpperCase()}
+                            </button>
+                        ))}
                     </div>
-                    <a href="#services" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.services}</a>
-                    <a href="#pricing" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.pricing}</a>
-                    <a href="#brands" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.brands}</a>
-                    <Link href="/login" onClick={() => setIsOpen(false)} className="text-slate-600 font-medium hover:text-blue-600">{t.header.creators}</Link>
-                    <Link href="/login" onClick={() => setIsOpen(false)} className="w-full mt-4 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-center hover:bg-indigo-100 transition-colors">
+                    {[t.header.services, t.header.pricing, t.header.brands, t.header.creators].map((label, i) => (
+                        <a
+                            key={i}
+                            href={['#services','#pricing','#brands','/login'][i]}
+                            onClick={() => setIsOpen(false)}
+                            className="font-medium transition-colors text-secondary hover:text-accent"
+                        >
+                            {label}
+                        </a>
+                    ))}
+                    <Link
+                        href="/login"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full mt-3 px-6 py-3 rounded-2xl font-semibold text-center transition-all
+                            bg-white/40 dark:bg-white/8 text-blue-600 dark:text-blue-400
+                            border border-blue-200/50 dark:border-blue-500/20"
+                    >
                         Login
                     </Link>
-                    <a href="https://discord.gg/9WE9sGyZ" target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="w-full mt-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-semibold shadow-sm text-center">
+                    <a
+                        href="https://discord.gg/9WE9sGyZ"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full mt-1 px-6 py-3 rounded-2xl font-semibold text-center lg-btn-primary"
+                    >
                         {t.header.bookDemo}
                     </a>
                 </div>

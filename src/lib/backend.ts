@@ -103,6 +103,38 @@ export async function fetchClipperById(discordId: string): Promise<ClipperRespon
     return all.find((c) => c.discord_id === discordId) ?? null;
 }
 
+export async function findOrCreateClipperWithDiscordToken(accessToken: string): Promise<ClipperResponse | null> {
+    const res = await fetch(`${BACKEND_URL}/backend/api/v1/profile`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+    });
+
+    if (!res.ok) throw await buildFetchError("findOrCreateClipperWithDiscordToken", res);
+
+    const body = await res.json().catch(() => null) as unknown;
+    const envelope = body as { data?: Partial<ClipperResponse> } | null;
+    const data = envelope && typeof envelope === "object" && "data" in envelope
+        ? envelope.data
+        : body as Partial<ClipperResponse> | null;
+    if (!data?.discord_id) return null;
+
+    return {
+        discord_id: data.discord_id,
+        username: data.username ?? "",
+        payment_info: data.payment_info ?? "",
+        bank_no: data.bank_no,
+        bank_type: data.bank_type,
+        pending_balance: data.pending_balance ?? 0,
+        paid_amount: data.paid_amount ?? 0,
+        total_earnings: data.total_earnings ?? 0,
+        total_views: data.total_views ?? 0,
+        status: data.status ?? "active",
+        created_at: data.created_at,
+    };
+}
+
 // ─── Campaigns ───────────────────────────────────────────────────────────────
 
 export interface CampaignResponse {

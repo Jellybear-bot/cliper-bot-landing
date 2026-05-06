@@ -16,7 +16,11 @@ export default function RootLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="th">
+        <html lang="th" suppressHydrationWarning>
+            <head>
+                {/* Anti-flicker: apply dark class before paint */}
+                <script dangerouslySetInnerHTML={{ __html: `(function(){var s=localStorage.getItem('crowdclip-theme');var p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(s===null&&p)){document.documentElement.classList.add('dark')}})()` }} />
+            </head>
             <body className={inter.className}>
                 <Providers>{children}</Providers>
             </body>

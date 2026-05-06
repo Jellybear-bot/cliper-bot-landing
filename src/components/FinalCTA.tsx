@@ -7,23 +7,36 @@ export default function FinalCTA() {
     const { t } = useLanguage();
 
     return (
-        <section className="py-24 relative overflow-hidden bg-white">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 via-purple-100/30 to-slate-50 z-0" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-200/40 via-transparent to-transparent z-0" />
+        <section className="py-24 relative overflow-hidden">
+            {/* Background orbs */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full blur-[140px]
+                    bg-gradient-to-br from-blue-400/15 via-indigo-400/10 to-transparent
+                    dark:from-blue-600/12 dark:via-indigo-600/8 dark:to-transparent" />
+            </div>
 
             <div className="container mx-auto px-6 relative z-10 text-center">
-                <div className="max-w-4xl mx-auto bg-white/60 backdrop-blur-xl border border-white p-10 md:p-16 rounded-[2rem] shadow-xl shadow-blue-900/5">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg shadow-blue-500/30">
-                        <Rocket className="w-10 h-10 text-white" />
-                    </div>
-                    <h2 className="text-4xl md:text-6xl font-extrabold mb-6 text-slate-900 leading-tight">
-                        {t.finalCta.title1} <br /> {t.finalCta.title2}
-                    </h2>
-                    <p className="text-lg text-slate-600 mb-10 max-w-xl mx-auto font-medium">
-                        {t.finalCta.subtitle}
-                    </p>
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-                        <button className="px-10 py-5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg w-full sm:w-auto transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/30">
+                <div className="max-w-4xl mx-auto lg-card p-10 md:p-16 relative overflow-hidden">
+                    {/* Inner glow */}
+                    <div className="absolute inset-0 rounded-3xl pointer-events-none
+                        bg-gradient-to-b from-blue-400/5 to-purple-400/3 dark:from-blue-600/6 dark:to-purple-600/3" />
+
+                    <div className="relative z-10">
+                        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8
+                            bg-gradient-to-br from-blue-500 to-indigo-600
+                            shadow-2xl shadow-blue-500/30">
+                            <Rocket className="w-10 h-10 text-white" />
+                        </div>
+
+                        <h2 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight text-primary">
+                            {t.finalCta.title1} <br /> {t.finalCta.title2}
+                        </h2>
+
+                        <p className="text-lg mb-10 max-w-xl mx-auto font-medium text-secondary">
+                            {t.finalCta.subtitle}
+                        </p>
+
+                        <button className="px-12 py-5 font-bold text-lg w-full sm:w-auto active:scale-95 lg-btn-primary">
                             {t.finalCta.button}
                         </button>
                     </div>
