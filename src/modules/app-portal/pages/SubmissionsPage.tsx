@@ -17,24 +17,24 @@ const fmtViews = (n: number) => {
 };
 
 function getStatusStyle(status: string) {
-    if (status.includes("🟢")) return "bg-emerald-100 text-emerald-700 border-emerald-200";
-    if (status.includes("⏳")) return "bg-amber-100 text-amber-700 border-amber-200";
-    if (status.includes("🔴") || status.includes("❌")) return "bg-rose-100 text-rose-700 border-rose-200";
-    if (status.includes("📉")) return "bg-blue-100 text-blue-700 border-blue-200";
-    return "bg-slate-100 text-slate-600 border-slate-200";
+    if (status.includes("🟢")) return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
+    if (status.includes("⏳")) return "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
+    if (status.includes("🔴") || status.includes("❌")) return "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
+    if (status.includes("📉")) return "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20";
+    return "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10";
 }
 
 function SkeletonRow() {
     return (
         <div className="flex items-center gap-4 p-5 animate-pulse">
-            <div className="w-11 h-11 rounded-xl bg-slate-200 shrink-0" />
+            <div className="w-11 h-11 rounded-xl bg-slate-200 dark:bg-white/10 shrink-0" />
             <div className="flex-1 space-y-2">
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 rounded w-1/2" />
+                <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-3/4" />
+                <div className="h-3 bg-slate-100 dark:bg-white/8 rounded w-1/2" />
             </div>
             <div className="flex flex-col items-end gap-2 shrink-0">
-                <div className="h-5 bg-slate-200 rounded w-20" />
-                <div className="h-4 bg-slate-100 rounded w-12" />
+                <div className="h-5 bg-slate-200 dark:bg-white/10 rounded w-20" />
+                <div className="h-4 bg-slate-100 dark:bg-white/8 rounded w-12" />
             </div>
         </div>
     );
@@ -90,12 +90,12 @@ export function SubmissionsPage() {
     return (
         <div className="space-y-7 pb-12 w-full">
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">{s.title}</h1>
-                <p className="text-slate-500 text-sm font-medium">{s.subtitle}</p>
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{s.title}</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{s.subtitle}</p>
             </div>
 
             {shouldMockSubmissions && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
                         : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
@@ -104,10 +104,10 @@ export function SubmissionsPage() {
             )}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <SummaryCard label={s.totalSubmitted} value={loading && !shouldMockSubmissions ? "..." : String(searched.length)} icon={<Video size={18} />} iconBg="bg-slate-100" iconColor="text-slate-600" />
-                <SummaryCard label={s.activeEarning} value={loading && !shouldMockSubmissions ? "..." : String(activeCount)} icon={<Eye size={18} />} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
-                <SummaryCard label={s.totalViews} value={loading && !shouldMockSubmissions ? "..." : fmtViews(totalViews)} icon={<Eye size={18} />} iconBg="bg-blue-100" iconColor="text-blue-600" />
-                <SummaryCard label={s.totalEarnings} value={loading && !shouldMockSubmissions ? "..." : `฿${fmt(totalEarnings)}`} icon={<DollarSign size={18} />} iconBg="bg-violet-100" iconColor="text-violet-600" />
+                <SummaryCard label={s.totalSubmitted} value={loading && !shouldMockSubmissions ? "..." : String(searched.length)} icon={<Video size={18} />} iconBg="bg-slate-100 dark:bg-white/10" iconColor="text-slate-600 dark:text-slate-300" />
+                <SummaryCard label={s.activeEarning} value={loading && !shouldMockSubmissions ? "..." : String(activeCount)} icon={<Eye size={18} />} iconBg="bg-emerald-100 dark:bg-emerald-500/20" iconColor="text-emerald-600 dark:text-emerald-400" />
+                <SummaryCard label={s.totalViews} value={loading && !shouldMockSubmissions ? "..." : fmtViews(totalViews)} icon={<Eye size={18} />} iconBg="bg-blue-100 dark:bg-blue-500/20" iconColor="text-blue-600 dark:text-blue-400" />
+                <SummaryCard label={s.totalEarnings} value={loading && !shouldMockSubmissions ? "..." : `฿${fmt(totalEarnings)}`} icon={<DollarSign size={18} />} iconBg="bg-violet-100 dark:bg-violet-500/20" iconColor="text-violet-600 dark:text-violet-400" />
             </div>
 
             <div className="flex gap-2 flex-wrap">
@@ -117,9 +117,9 @@ export function SubmissionsPage() {
                         <button key={filter.key} onClick={() => setActiveFilter(filter.key)}
                             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeFilter === filter.key
                                 ? "bg-blue-600 text-white shadow-sm"
-                                : "bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600"}`}>
+                                : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"}`}>
                             {filter.label}
-                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${activeFilter === filter.key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${activeFilter === filter.key ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400"}`}>
                                 {loading ? "-" : count}
                             </span>
                         </button>
@@ -130,15 +130,15 @@ export function SubmissionsPage() {
             <div className="space-y-3">
                 {loading && !shouldMockSubmissions ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
                             <SkeletonRow />
                         </div>
                     ))
                 ) : filtered.length === 0 ? (
-                    <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
-                        <Video size={40} className="text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500 font-semibold">{searchQuery ? `No submissions match "${searchQuery}"` : s.noSubmissions}</p>
-                        {!searchQuery && <p className="text-slate-400 text-sm mt-1">{s.noSubmissionsSub}</p>}
+                    <div className="text-center py-16 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl">
+                        <Video size={40} className="text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                        <p className="text-slate-500 dark:text-slate-400 font-semibold">{searchQuery ? `No submissions match "${searchQuery}"` : s.noSubmissions}</p>
+                        {!searchQuery && <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">{s.noSubmissionsSub}</p>}
                     </div>
                 ) : (
                     filtered.map((submission) => (
@@ -161,20 +161,20 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
     const [expanded, setExpanded] = useState(false);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div className="flex items-center gap-4 p-5 cursor-pointer hover:bg-slate-50/60 transition-colors" onClick={() => setExpanded(!expanded)}>
-                <div className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                    <Video size={20} className="text-slate-500" />
+        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+            <div className="flex items-center gap-4 p-5 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-white/5 transition-colors" onClick={() => setExpanded(!expanded)}>
+                <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                    <Video size={20} className="text-slate-500 dark:text-slate-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-sm font-bold text-slate-700 truncate">{sub.video_url.replace("https://", "")}</p>
-                        <a href={sub.video_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-slate-400 hover:text-blue-500 transition-colors shrink-0">
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{sub.video_url.replace("https://", "")}</p>
+                        <a href={sub.video_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors shrink-0">
                             <ExternalLink size={13} />
                         </a>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-400 font-medium flex-wrap">
-                        <span className="font-semibold text-slate-500">{sub.campaign_name}</span>
+                    <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 font-medium flex-wrap">
+                        <span className="font-semibold text-slate-500 dark:text-slate-400">{sub.campaign_name}</span>
                         <span>·</span>
                         <span>{fmtViews(sub.play_count)} {s.views}</span>
                         <span>·</span>
@@ -186,16 +186,16 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
                         {getStatusLabel(sub.status)}
                     </span>
                     {sub.calculated_payout > 0 ? (
-                        <span className="text-sm font-extrabold text-emerald-600">฿{fmt(sub.calculated_payout)}</span>
+                        <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">฿{fmt(sub.calculated_payout)}</span>
                     ) : (
-                        <span className="text-xs text-slate-300 font-medium">฿0</span>
+                        <span className="text-xs text-slate-300 dark:text-slate-600 font-medium">฿0</span>
                     )}
                 </div>
             </div>
 
             {expanded && (
-                <div className="border-t border-slate-100 px-5 py-4 bg-slate-50/50">
-                    <p className="text-xs text-slate-500 font-medium mb-4 bg-white border border-slate-200 rounded-lg px-3 py-2">
+                <div className="border-t border-slate-100 dark:border-white/8 px-5 py-4 bg-slate-50/50 dark:bg-white/[0.02]">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-4 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2">
                         {getStatusDesc(sub.status)}
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -205,9 +205,9 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
                         <StatMini icon={<Share2 size={14} />} label={s.shares} value={fmtViews(sub.share_count)} />
                     </div>
                     {sub.calculated_payout > 0 && (
-                        <div className="mt-3 flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-                            <span className="text-sm font-semibold text-emerald-700">{s.totalEarningsFromVideo}</span>
-                            <span className="text-base font-extrabold text-emerald-700">฿{fmt(sub.calculated_payout)}</span>
+                        <div className="mt-3 flex items-center justify-between bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl px-4 py-3">
+                            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{s.totalEarningsFromVideo}</span>
+                            <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-400">฿{fmt(sub.calculated_payout)}</span>
                         </div>
                     )}
                 </div>
@@ -218,22 +218,22 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
 
 function SummaryCard({ label, value, icon, iconBg, iconColor }: { label: string; value: string; icon: React.ReactNode; iconBg: string; iconColor: string }) {
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
             <div className={`w-9 h-9 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center mb-3`}>{icon}</div>
-            <p className="text-2xl font-extrabold text-slate-900">{value}</p>
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">{label}</p>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{value}</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
         </div>
     );
 }
 
 function StatMini({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-slate-400 dark:text-slate-500 mb-1">
                 {icon}
                 <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
             </div>
-            <p className="text-base font-bold text-slate-800">{value}</p>
+            <p className="text-base font-bold text-slate-800 dark:text-slate-100">{value}</p>
         </div>
     );
 }

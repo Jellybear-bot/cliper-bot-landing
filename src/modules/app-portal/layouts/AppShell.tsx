@@ -4,12 +4,13 @@ import { ReactNode, startTransition, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard, Settings, LogOut, Search, Bell, Menu, X,
-    Megaphone, Video, Wallet, CheckCheck, BarChart3
+    Megaphone, Video, Wallet, CheckCheck, BarChart3, Sun, Moon
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { mockLogout } from "@/modules/app-portal/services/auth/actions";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useCampaigns, useMe, usePayouts, useSubmissions } from "@/lib/portalApi";
 import type { CampaignResponse, ClipperResponse, PayoutResponse, SubmissionResponse } from "@/lib/portalApi";
 import { FORCE_PORTAL_MOCK_MODE, PORTAL_ROLE_OVERRIDE_ENABLED, shouldUsePortalMockData } from "@/lib/portalConfig";
@@ -134,6 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     const notiRef = useRef<HTMLDivElement>(null);
 
     const { t, language, setLanguage } = useLanguage();
+    const { isDark, toggle: toggleDark } = useTheme();
     const a = t.app;
 
     const { data: me, loading: meLoading, error: meError } = useMe();
@@ -256,7 +258,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         .join("") || "PU";
 
     return (
-        <div className="flex bg-[#F8FAFC] text-slate-900 h-screen overflow-hidden font-sans">
+        <div className="flex bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 h-screen overflow-hidden font-sans">
             <AnimatePresence>
                 {isSidebarOpen && (
                     <motion.div
@@ -264,31 +266,31 @@ export function AppShell({ children }: { children: ReactNode }) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm"
+                        className="fixed inset-0 bg-slate-900/50 dark:bg-black/70 z-40 lg:hidden backdrop-blur-sm"
                     />
                 )}
             </AnimatePresence>
 
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:transform-none ${isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
+                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-white/[0.04] dark:backdrop-blur-xl border-r border-slate-200 dark:border-white/10 flex flex-col transform transition-transform duration-300 ease-in-out lg:transform-none ${isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
             >
-                <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
+                <div className="h-16 flex items-center px-6 border-b border-slate-100 dark:border-white/8 shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-sm">
                             C
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-slate-800">CrowdClip</span>
+                        <span className="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-100">CrowdClip</span>
                     </div>
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="ml-auto lg:hidden text-slate-400 hover:text-slate-600"
+                        className="ml-auto lg:hidden text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto py-6 px-4">
-                    <p className="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                    <p className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">
                         {a.common.menu}
                     </p>
                     <nav className="space-y-1">
@@ -305,9 +307,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </nav>
                 </div>
 
-                <div className="p-4 border-t border-slate-100 shrink-0">
+                <div className="p-4 border-t border-slate-100 dark:border-white/8 shrink-0">
                     <form action={mockLogout}>
-                        <button type="submit" className="flex items-center gap-3 w-full px-4 py-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors group font-medium text-sm">
+                        <button type="submit" className="flex items-center gap-3 w-full px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors group font-medium text-sm">
                             <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
                             <span>{a.common.signOut}</span>
                         </button>
@@ -316,41 +318,41 @@ export function AppShell({ children }: { children: ReactNode }) {
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 relative">
+                <header className="h-16 bg-white dark:bg-white/[0.04] dark:backdrop-blur-xl border-b border-slate-200 dark:border-white/10 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 relative">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            className="lg:hidden p-2 -ml-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors"
                         >
                             <Menu size={24} />
                         </button>
                         <div className="hidden sm:flex relative group max-w-md w-full">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search size={16} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                <Search size={16} className="text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors" />
                             </div>
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(event) => handleSearchChange(event.target.value)}
                                 placeholder={a.common.searchPlaceholder}
-                                className="w-80 bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                                className="w-80 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                             />
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3">
                         {PORTAL_ROLE_OVERRIDE_ENABLED && (
-                            <div className="hidden md:flex items-center gap-1 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-1">
+                            <div className="hidden md:flex items-center gap-1 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-1">
                                 <button
                                     onClick={() => handleSetRole("member")}
-                                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "member" ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "member" ? "bg-slate-700 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
                                     title="Switch local test role to member"
                                 >
                                     MEMBER
                                 </button>
                                 <button
                                     onClick={() => handleSetRole("vip")}
-                                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "vip" ? "bg-amber-500 text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "vip" ? "bg-amber-500 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
                                     title="Switch local test role to vip"
                                 >
                                     VIP
@@ -358,29 +360,37 @@ export function AppShell({ children }: { children: ReactNode }) {
                             </div>
                         )}
 
-                        <div className="flex items-center rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                        <div className="flex items-center rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
                             <button
                                 onClick={() => setLanguage("th")}
-                                className={`px-3 py-1.5 text-xs font-bold transition-all ${language === "th" ? "bg-blue-600 text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                className={`px-3 py-1.5 text-xs font-bold transition-all ${language === "th" ? "bg-blue-600 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
                             >
                                 TH
                             </button>
                             <button
                                 onClick={() => setLanguage("en")}
-                                className={`px-3 py-1.5 text-xs font-bold transition-all ${language === "en" ? "bg-blue-600 text-white" : "text-slate-500 hover:text-slate-700"}`}
+                                className={`px-3 py-1.5 text-xs font-bold transition-all ${language === "en" ? "bg-blue-600 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}
                             >
                                 EN
                             </button>
                         </div>
 
+                        <button
+                            onClick={toggleDark}
+                            className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                        >
+                            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                        </button>
+
                         <div className="relative" ref={notiRef}>
                             <button
                                 onClick={() => setIsNotiOpen((value) => !value)}
-                                className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors rounded-full hover:bg-slate-100"
+                                className="relative p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-white/10"
                             >
                                 <Bell size={20} />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-rose-500 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white leading-none">
+                                    <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center text-[9px] font-bold text-white leading-none">
                                         {unreadCount}
                                     </span>
                                 )}
@@ -393,15 +403,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 6, scale: 0.97 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-50"
+                                        className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900/95 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-black/50 overflow-hidden z-50"
                                     >
-                                        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                                        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/8">
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-slate-800 text-sm">
+                                                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
                                                     {language === "th" ? "การแจ้งเตือน" : "Notifications"}
                                                 </h3>
                                                 {unreadCount > 0 && (
-                                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600">
+                                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">
                                                         {unreadCount} {language === "th" ? "ใหม่" : "new"}
                                                     </span>
                                                 )}
@@ -409,16 +419,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                                             {unreadCount > 0 && (
                                                 <button
                                                     onClick={markAllRead}
-                                                    className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                                                    className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                                                 >
                                                     <CheckCheck size={13} /> {language === "th" ? "อ่านทั้งหมด" : "Mark all read"}
                                                 </button>
                                             )}
                                         </div>
 
-                                        <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                                        <div className="max-h-80 overflow-y-auto divide-y divide-slate-50 dark:divide-white/5">
                                             {notifications.length === 0 ? (
-                                                <p className="px-4 py-8 text-center text-sm text-slate-400">
+                                                <p className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
                                                     {language === "th" ? "ยังไม่มีการแจ้งเตือน" : "No notifications yet"}
                                                 </p>
                                             ) : (
@@ -432,8 +442,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                                             )}
                                         </div>
 
-                                        <div className="px-4 py-2.5 border-t border-slate-100 text-center">
-                                            <p className="text-[11px] text-slate-400 font-medium">
+                                        <div className="px-4 py-2.5 border-t border-slate-100 dark:border-white/8 text-center">
+                                            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                                                 {language === "th" ? "อ้างอิงจากข้อมูลพอร์ทัลล่าสุด" : "Built from the latest portal data"}
                                             </p>
                                         </div>
@@ -442,14 +452,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                             </AnimatePresence>
                         </div>
 
-                        <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+                        <div className="h-6 w-px bg-slate-200 dark:bg-white/10 hidden sm:block" />
 
-                        <div className="flex items-center gap-3 cursor-pointer group rounded-lg hover:bg-slate-50 p-1.5 pr-2 transition-colors">
+                        <div className="flex items-center gap-3 cursor-pointer group rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 p-1.5 pr-2 transition-colors">
                             <div className="hidden sm:block text-right">
-                                <p className="text-sm font-bold text-slate-700 leading-none mb-1">{profileName}</p>
-                                <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider leading-none">{profileStatus}</p>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-none mb-1">{profileName}</p>
+                                <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider leading-none">{profileStatus}</p>
                             </div>
-                            <div className="w-9 h-9 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-sm shadow-sm">
+                            <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-sm shadow-sm">
                                 {profileInitials}
                             </div>
                         </div>
@@ -470,17 +480,17 @@ function NotiItem({ noti, onRead }: { noti: Notification; onRead: () => void }) 
     const content = (
         <div
             onClick={onRead}
-            className={`flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors hover:bg-slate-50 ${!noti.read ? "bg-blue-50/40" : ""}`}
+            className={`flex items-start gap-3 px-4 py-3.5 cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${!noti.read ? "bg-blue-50/40 dark:bg-blue-500/10" : ""}`}
         >
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 mt-0.5 ${noti.type === "campaign" ? "bg-blue-100" : noti.type === "payout" ? "bg-emerald-100" : "bg-slate-100"}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 mt-0.5 ${noti.type === "campaign" ? "bg-blue-100 dark:bg-blue-500/20" : noti.type === "payout" ? "bg-emerald-100 dark:bg-emerald-500/20" : "bg-slate-100 dark:bg-white/10"}`}>
                 {TYPE_ICON[noti.type]}
             </div>
             <div className="flex-1 min-w-0">
-                <p className={`text-sm leading-snug ${!noti.read ? "font-bold text-slate-800" : "font-semibold text-slate-700"}`}>
+                <p className={`text-sm leading-snug ${!noti.read ? "font-bold text-slate-800 dark:text-slate-100" : "font-semibold text-slate-700 dark:text-slate-200"}`}>
                     {noti.title}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{noti.desc}</p>
-                <p className="text-[10px] text-slate-400 font-medium mt-1">{noti.time}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{noti.desc}</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1">{noti.time}</p>
             </div>
             {!noti.read && (
                 <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
@@ -501,17 +511,17 @@ function NavItem({ href, icon, label, active, onClick }: {
     return (
         <Link href={href} onClick={onClick}>
             <div className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-all duration-200 relative group cursor-pointer ${active
-                ? "text-blue-700 font-semibold bg-blue-50/80"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
+                ? "text-blue-700 dark:text-blue-400 font-semibold bg-blue-50/80 dark:bg-blue-500/15"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-white/5 font-medium"
                 }`}>
-                <div className={`transition-colors duration-200 ${active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`}>
+                <div className={`transition-colors duration-200 ${active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>
                     {icon}
                 </div>
                 <span className="text-sm">{label}</span>
                 {active && (
                     <motion.div
                         layoutId="nav-active-indicator"
-                        className="w-1 h-5 rounded-r-full bg-blue-600 absolute left-0 top-1/2 -translate-y-1/2"
+                        className="w-1 h-5 rounded-r-full bg-blue-600 dark:bg-blue-400 absolute left-0 top-1/2 -translate-y-1/2"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}

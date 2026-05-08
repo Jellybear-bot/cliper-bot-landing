@@ -17,11 +17,11 @@ const fmtDate = (value: string) => new Date(value).toLocaleDateString("th-TH", {
 const PRESET_AMOUNTS = [500, 1000, 5000, 10000];
 
 function getPayoutStatusStyle(status: string) {
-    if (status.includes("✅")) return { badge: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: <CheckCircle2 size={14} /> };
-    if (status.includes("⏳")) return { badge: "bg-amber-100 text-amber-700 border-amber-200", icon: <Clock size={14} /> };
-    if (status.includes("❌")) return { badge: "bg-rose-100 text-rose-700 border-rose-200", icon: <XCircle size={14} /> };
-    if (status.includes("🚫")) return { badge: "bg-slate-100 text-slate-600 border-slate-200", icon: <Ban size={14} /> };
-    return { badge: "bg-slate-100 text-slate-600 border-slate-200", icon: <Clock size={14} /> };
+    if (status.includes("✅")) return { badge: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20", icon: <CheckCircle2 size={14} /> };
+    if (status.includes("⏳")) return { badge: "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20", icon: <Clock size={14} /> };
+    if (status.includes("❌")) return { badge: "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20", icon: <XCircle size={14} /> };
+    if (status.includes("🚫")) return { badge: "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10", icon: <Ban size={14} /> };
+    return { badge: "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10", icon: <Clock size={14} /> };
 }
 
 function BalanceSkeleton() {
@@ -128,16 +128,16 @@ export function WithdrawPage() {
     return (
         <div className="space-y-7 pb-12 w-full">
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">{w.title}</h1>
-                <p className="text-slate-500 text-sm font-medium">{w.subtitle}</p>
-                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-full px-3 py-1.5">
-                    <span className={`w-2 h-2 rounded-full ${role === "vip" ? "bg-amber-400" : "bg-slate-400"}`} />
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{w.title}</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{w.subtitle}</p>
+                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-3 py-1.5">
+                    <span className={`w-2 h-2 rounded-full ${role === "vip" ? "bg-amber-400" : "bg-slate-400 dark:bg-slate-500"}`} />
                     Role: {role.toUpperCase()} · ถอนขั้นต่ำ ฿{fmt(minWithdrawAmount)}
                 </div>
             </div>
 
             {isMockMode && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
                         : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
@@ -167,52 +167,52 @@ export function WithdrawPage() {
                     )}
 
                     {hasPendingRequest && (
-                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-                            <Clock size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl px-5 py-4">
+                            <Clock size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                             <div>
-                                <p className="text-sm font-bold text-amber-800">{w.pendingWarningTitle}</p>
-                                <p className="text-xs text-amber-600 mt-0.5">{w.pendingWarningDesc}</p>
+                                <p className="text-sm font-bold text-amber-800 dark:text-amber-300">{w.pendingWarningTitle}</p>
+                                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">{w.pendingWarningDesc}</p>
                             </div>
                         </div>
                     )}
 
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-                        <h2 className="font-bold text-slate-800 mb-5 flex items-center gap-2">
-                            <ArrowDownToLine size={18} className="text-slate-400" />
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm p-6">
+                        <h2 className="font-bold text-slate-800 dark:text-slate-100 mb-5 flex items-center gap-2">
+                            <ArrowDownToLine size={18} className="text-slate-400 dark:text-slate-500" />
                             {w.requestWithdrawal}
                         </h2>
                         <form onSubmit={handleWithdraw} className="space-y-5">
                             <div>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{w.quickSelect}</p>
+                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{w.quickSelect}</p>
                                 <div className="flex gap-2 flex-wrap">
                                     {PRESET_AMOUNTS.map((preset) => (
                                         <button key={preset} type="button" onClick={() => setAmount(String(preset))}
                                             disabled={preset > pendingBalance}
-                                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${amount === String(preset) ? "bg-blue-600 text-white border-blue-600" : preset > pendingBalance ? "bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed" : "bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:text-blue-600"}`}>
+                                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${amount === String(preset) ? "bg-blue-600 text-white border-blue-600" : preset > pendingBalance ? "bg-slate-50 dark:bg-white/5 text-slate-300 dark:text-slate-600 border-slate-200 dark:border-white/10 cursor-not-allowed" : "bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"}`}>
                                             ฿{fmt(preset)}
                                         </button>
                                     ))}
                                     <button type="button"
                                         onClick={() => setAmount(String(Math.floor(pendingBalance)))}
                                         disabled={pendingBalance < 100}
-                                        className="px-4 py-2 rounded-xl text-sm font-bold border bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all">
+                                        className="px-4 py-2 rounded-xl text-sm font-bold border bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                         {w.max}
                                     </button>
                                 </div>
                             </div>
 
                             <div>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{w.amountLabel}</p>
+                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{w.amountLabel}</p>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">฿</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400 dark:text-slate-500">฿</span>
                                     <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
                                         min={minWithdrawAmount} step={1} max={Math.floor(pendingBalance)} placeholder="0"
-                                        className="w-full pl-8 pr-4 py-3.5 text-xl font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                                        className="w-full pl-8 pr-4 py-3.5 text-xl font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" />
                                 </div>
                                 <AnimatePresence>
                                     {validation && (
                                         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                            className={`flex items-center gap-2 text-xs font-semibold mt-2 ${validation.type === "ok" ? "text-emerald-600" : "text-rose-600"}`}>
+                                            className={`flex items-center gap-2 text-xs font-semibold mt-2 ${validation.type === "ok" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                                             {validation.type === "ok" ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
                                             {validation.text}
                                         </motion.div>
@@ -221,17 +221,17 @@ export function WithdrawPage() {
                             </div>
 
                             {(!meLoading || shouldMockMe) && clipperData && (
-                                <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-                                    <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
-                                        <Building2 size={18} className="text-slate-500" />
+                                <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
+                                    <div className="w-9 h-9 rounded-xl bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                                        <Building2 size={18} className="text-slate-500 dark:text-slate-400" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-700">{clipperData.bank_type || "ยังไม่มีบัญชีธนาคาร"}</p>
-                                        <p className="text-xs text-slate-400 font-medium">{clipperData.bank_no || "-"}</p>
+                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{clipperData.bank_type || "ยังไม่มีบัญชีธนาคาร"}</p>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{clipperData.bank_no || "-"}</p>
                                     </div>
                                     {clipperData.bank_no && (
                                         <div className="ml-auto">
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">{w.verified}</span>
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">{w.verified}</span>
                                         </div>
                                     )}
                                 </div>
@@ -247,13 +247,13 @@ export function WithdrawPage() {
                             <AnimatePresence>
                                 {submitStatus === "success" && (
                                     <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                        className="flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl">
+                                        className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-4 py-3 rounded-xl">
                                         <CheckCircle2 size={16} /> {submitMessage ?? w.successMsg}
                                     </motion.div>
                                 )}
                                 {submitStatus === "error" && (
                                     <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                        className="flex items-center gap-2 text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-4 py-3 rounded-xl">
+                                        className="flex items-center gap-2 text-sm font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 px-4 py-3 rounded-xl">
                                         <AlertCircle size={16} /> {submitMessage ?? "Unable to request payout"}
                                     </motion.div>
                                 )}
@@ -263,48 +263,48 @@ export function WithdrawPage() {
                 </div>
 
                 <div className="space-y-5">
-                    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                        <h3 className="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
-                            <Info size={16} className="text-slate-400" /> {w.rulesTitle}
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
+                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-4 flex items-center gap-2">
+                            <Info size={16} className="text-slate-400 dark:text-slate-500" /> {w.rulesTitle}
                         </h3>
                         <ul className="space-y-2.5">
                             {w.rules.map((rule, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                                    <span className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
+                                <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                    <span className="w-5 h-5 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
                                     {rule}
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100">
-                            <h3 className="font-bold text-slate-800 text-sm">{w.history}</h3>
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/8">
+                            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{w.history}</h3>
                         </div>
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-slate-100 dark:divide-white/8">
                             {payoutsLoading && !shouldMockPayouts ? (
                                 Array.from({ length: 3 }).map((_, i) => (
                                     <div key={i} className="flex items-center gap-3 px-5 py-3.5 animate-pulse">
                                         <div className="flex-1 space-y-1.5">
-                                            <div className="h-4 bg-slate-200 rounded w-20" />
-                                            <div className="h-3 bg-slate-100 rounded w-16" />
+                                            <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-20" />
+                                            <div className="h-3 bg-slate-100 dark:bg-white/8 rounded w-16" />
                                         </div>
-                                        <div className="h-5 bg-slate-200 rounded w-16" />
+                                        <div className="h-5 bg-slate-200 dark:bg-white/10 rounded w-16" />
                                     </div>
                                 ))
                             ) : filteredPayouts.length === 0 ? (
-                                <p className="text-center text-slate-400 text-sm py-8">
+                                <p className="text-center text-slate-400 dark:text-slate-500 text-sm py-8">
                                     {searchQuery ? `No payouts match "${searchQuery}"` : w.noPayouts}
                                 </p>
                             ) : (
                                 filteredPayouts.map((payout: PayoutResponse) => {
                                     const { badge, icon } = getPayoutStatusStyle(payout.status);
                                     return (
-                                        <div key={payout.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
+                                        <div key={payout.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 dark:hover:bg-white/5 transition-colors">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-slate-700">฿{fmt(payout.amount)}</p>
-                                                <p className="text-[11px] text-slate-400 mt-0.5">{fmtDate(payout.created_at)}</p>
-                                                {payout.reason && <p className="text-[11px] text-rose-500 mt-0.5">{payout.reason}</p>}
+                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">฿{fmt(payout.amount)}</p>
+                                                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{fmtDate(payout.created_at)}</p>
+                                                {payout.reason && <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-0.5">{payout.reason}</p>}
                                             </div>
                                             <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border uppercase tracking-wide ${badge}`}>
                                                 {icon} {getPayoutStatusLabel(payout.status)}

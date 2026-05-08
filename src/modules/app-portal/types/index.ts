@@ -16,7 +16,9 @@ export interface Campaign {
     id: string
     campaign_name: string
     client_name: string
+    campaign_description: string
     total_budget: number
+    platform_fee_rate: number
     view_target: number
     cost_per_thousand_views: number
     campaign_material_link: string

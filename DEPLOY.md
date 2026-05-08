@@ -2,12 +2,12 @@
 
 This project deploys to:
 
-- `https://landing.clip-hunter.online`
+- `https://clip-hunter.online`
 
 ## Manual deploy
 
 ```bash
-npx wrangler deploy --keep-vars --domains landing.clip-hunter.online
+npx wrangler deploy --keep-vars --domains clip-hunter.online
 ```
 
 ## GitHub Actions

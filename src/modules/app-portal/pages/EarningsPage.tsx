@@ -114,12 +114,12 @@ export function EarningsPage() {
     return (
         <div className="space-y-7 pb-12 w-full">
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-1">{e.title}</h1>
-                <p className="text-slate-500 text-sm font-medium">{e.subtitle}</p>
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{e.title}</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{e.subtitle}</p>
             </div>
 
             {shouldMock && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium px-4 py-3 rounded-xl">
+                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 text-sm font-medium px-4 py-3 rounded-xl">
                     {FORCE_PORTAL_MOCK_MODE
                         ? "⚠️ เปิดโหมดข้อมูลจำลองชั่วคราว (NEXT_PUBLIC_PORTAL_MOCK_MODE=true)"
                         : "⚠️ ขณะนี้ไม่สามารถเชื่อมต่อ API ได้ กำลังแสดงข้อมูลจำลองชั่วคราวในโหมด dev"}
@@ -127,8 +127,8 @@ export function EarningsPage() {
                 </div>
             )}
 
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{e.selectCampaign}</p>
+            <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm p-5">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{e.selectCampaign}</p>
                 <div className="flex gap-2 flex-wrap">
                     {visibleCampaigns.map((campaign) => (
                         <button
@@ -136,7 +136,7 @@ export function EarningsPage() {
                             onClick={() => setSelectedCampaign(campaign.campaignName)}
                             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${selectedCampaign === campaign.campaignName
                                 ? "bg-blue-600 text-white"
-                                : "bg-slate-50 border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600"}`}
+                                : "bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"}`}
                         >
                             {campaign.campaignName}
                         </button>
@@ -145,31 +145,31 @@ export function EarningsPage() {
             </div>
 
             {!activeCampaign ? (
-                <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
-                    <BarChart3 size={40} className="text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-semibold">{searchQuery ? `No campaigns match "${searchQuery}"` : e.noData}</p>
+                <div className="text-center py-16 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl">
+                    <BarChart3 size={40} className="text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-500 dark:text-slate-400 font-semibold">{searchQuery ? `No campaigns match "${searchQuery}"` : e.noData}</p>
                 </div>
             ) : (
                 <>
                     <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-                        <SummaryCard label={e.totalEarnings} value={fmtCurrency(activeCampaign.totalEarnings)} icon={<Coins size={18} />} color="text-emerald-600" />
-                        <SummaryCard label={e.totalViews} value={fmt(activeCampaign.totalViews)} icon={<Eye size={18} />} color="text-blue-600" />
-                        <SummaryCard label={e.daysActive} value={`${activeCampaign.daysActive}`} icon={<CalendarClock size={18} />} color="text-violet-600" />
+                        <SummaryCard label={e.totalEarnings} value={fmtCurrency(activeCampaign.totalEarnings)} icon={<Coins size={18} />} color="text-emerald-600 dark:text-emerald-400" />
+                        <SummaryCard label={e.totalViews} value={fmt(activeCampaign.totalViews)} icon={<Eye size={18} />} color="text-blue-600 dark:text-blue-400" />
+                        <SummaryCard label={e.daysActive} value={`${activeCampaign.daysActive}`} icon={<CalendarClock size={18} />} color="text-violet-600 dark:text-violet-400" />
                         <SummaryCard
                             label={e.avgPerDay}
                             value={fmtCurrency(Math.round(activeCampaign.totalEarnings / Math.max(1, activeCampaign.daysActive)))}
                             icon={<BarChart3 size={18} />}
-                            color="text-amber-600"
+                            color="text-amber-600 dark:text-amber-400"
                         />
                     </div>
 
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100">
-                            <h2 className="font-bold text-slate-800 text-sm">{e.dailyGrowth}</h2>
+                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/8">
+                            <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{e.dailyGrowth}</h2>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-sm">
-                                <thead className="bg-slate-50 text-slate-500">
+                                <thead className="bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400">
                                     <tr>
                                         <th className="text-left font-bold px-5 py-3">{e.day}</th>
                                         <th className="text-right font-bold px-5 py-3">{e.earningIncrease}</th>
@@ -178,16 +178,16 @@ export function EarningsPage() {
                                         <th className="text-right font-bold px-5 py-3">{e.cumulativeViews}</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-slate-100 dark:divide-white/8">
                                     {activeCampaign.dailyRows.map((row) => (
-                                        <tr key={row.day} className="hover:bg-slate-50/70 transition-colors">
-                                            <td className="px-5 py-3 font-semibold text-slate-700">
+                                        <tr key={row.day} className="hover:bg-slate-50/70 dark:hover:bg-white/5 transition-colors">
+                                            <td className="px-5 py-3 font-semibold text-slate-700 dark:text-slate-200">
                                                 {new Date(row.day).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
                                             </td>
-                                            <td className="px-5 py-3 text-right font-bold text-emerald-600">+{fmtCurrency(row.earnings)}</td>
-                                            <td className="px-5 py-3 text-right font-bold text-blue-600">+{fmt(row.views)}</td>
-                                            <td className="px-5 py-3 text-right font-semibold text-slate-700">{fmtCurrency(row.cumulativeEarnings)}</td>
-                                            <td className="px-5 py-3 text-right font-semibold text-slate-700">{fmt(row.cumulativeViews)}</td>
+                                            <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">+{fmtCurrency(row.earnings)}</td>
+                                            <td className="px-5 py-3 text-right font-bold text-blue-600 dark:text-blue-400">+{fmt(row.views)}</td>
+                                            <td className="px-5 py-3 text-right font-semibold text-slate-700 dark:text-slate-200">{fmtCurrency(row.cumulativeEarnings)}</td>
+                                            <td className="px-5 py-3 text-right font-semibold text-slate-700 dark:text-slate-200">{fmt(row.cumulativeViews)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -212,10 +212,10 @@ function SummaryCard({
     color: string;
 }) {
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <div className={`w-9 h-9 rounded-xl bg-slate-50 ${color} flex items-center justify-center mb-3`}>{icon}</div>
-            <p className="text-2xl font-extrabold text-slate-900">{value}</p>
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">{label}</p>
+        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
+            <div className={`w-9 h-9 rounded-xl bg-slate-50 dark:bg-white/10 ${color} flex items-center justify-center mb-3`}>{icon}</div>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{value}</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
         </div>
     );
 }
