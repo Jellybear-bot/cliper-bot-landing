@@ -6,6 +6,7 @@ export const MOCK_CLIPPER: ClipperResponse = {
     payment_info: "role:vip | พร้อมเพย์: demo@example.com",
     bank_no: "123-4-56789-0",
     bank_type: "SCB",
+    bank_account_name: "สมชาย ใจดี",
     pending_balance: 12500,
     paid_amount: 12000,
     total_earnings: 24500,

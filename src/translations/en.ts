@@ -362,6 +362,8 @@ export const en = {
             bankName: "Bank Name",
             accountNumber: "Account Number",
             accountPlaceholder: "xxx-x-xxxxx-x",
+            accountName: "Account Name",
+            accountNamePlaceholder: "Full name as shown on bank account",
             noBankAccount: "No bank account registered",
             noBankDesc: "Add your bank account to receive payouts",
             savedSuccess: "Bank account updated successfully!",

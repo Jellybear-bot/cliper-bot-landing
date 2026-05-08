@@ -362,6 +362,8 @@ export const th = {
             bankName: "ชื่อธนาคาร",
             accountNumber: "เลขที่บัญชี",
             accountPlaceholder: "xxx-x-xxxxx-x",
+            accountName: "ชื่อบัญชี",
+            accountNamePlaceholder: "ชื่อ-นามสกุลตามบัญชีธนาคาร",
             noBankAccount: "ยังไม่มีบัญชีธนาคาร",
             noBankDesc: "เพิ่มบัญชีธนาคารเพื่อรับเงิน",
             savedSuccess: "อัปเดตบัญชีธนาคารสำเร็จ!",

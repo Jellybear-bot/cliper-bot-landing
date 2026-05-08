@@ -90,6 +90,7 @@ export function SettingsPage() {
     const [editingBank, setEditingBank] = useState(false);
     const [bankNo, setBankNo] = useState("");
     const [bankType, setBankType] = useState(BANK_OPTIONS[0]);
+    const [bankAccountName, setBankAccountName] = useState("");
     const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
     const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
@@ -97,6 +98,7 @@ export function SettingsPage() {
         if (clipperData) {
             setBankNo(clipperData.bank_no ?? "");
             setBankType(clipperData.bank_type || BANK_OPTIONS[0]);
+            setBankAccountName(clipperData.bank_account_name ?? "");
         }
     }, [clipperData]);
 
@@ -108,7 +110,7 @@ export function SettingsPage() {
         try {
             await requestJson("/api/portal/me/bank", {
                 method: "PATCH",
-                body: JSON.stringify({ bankNo, bankType }),
+                body: JSON.stringify({ bankNo, bankType, bankAccountName }),
             });
             setSaveStatus("saved");
             setSaveMessage(s.savedSuccess);
@@ -128,6 +130,7 @@ export function SettingsPage() {
         setEditingBank(false);
         setBankNo(clipperData?.bank_no ?? "");
         setBankType(clipperData?.bank_type || BANK_OPTIONS[0]);
+        setBankAccountName(clipperData?.bank_account_name ?? "");
         setSaveStatus("idle");
         setSaveMessage(null);
     };
@@ -235,6 +238,9 @@ export function SettingsPage() {
                                     <>
                                         <p className="font-bold text-slate-800 dark:text-slate-100">{clipperData.bank_type}</p>
                                         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">{clipperData.bank_no}</p>
+                                        {clipperData.bank_account_name && (
+                                            <p className="text-sm text-slate-600 dark:text-slate-300 font-semibold mt-0.5">{clipperData.bank_account_name}</p>
+                                        )}
                                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-2 py-0.5 rounded-md mt-2">
                                             <CheckCircle2 size={11} /> {a.common.verified}
                                         </span>
@@ -258,6 +264,16 @@ export function SettingsPage() {
                                 >
                                     {BANK_OPTIONS.map((bank) => <option key={bank} value={bank}>{bank}</option>)}
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{s.accountName}</label>
+                                <input
+                                    type="text"
+                                    value={bankAccountName}
+                                    onChange={(e) => setBankAccountName(e.target.value)}
+                                    placeholder={s.accountNamePlaceholder}
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{s.accountNumber}</label>

@@ -4,6 +4,7 @@ export interface Clipper {
     username: string
     bank_no: string
     bank_type: string
+    bank_account_name?: string
     total_views: number
     total_earnings: number
     paid_amount: number

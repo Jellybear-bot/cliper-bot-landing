@@ -81,6 +81,7 @@ export interface ClipperResponse {
     payment_info: string;
     bank_no?: string;
     bank_type?: string;
+    bank_account_name?: string;
     pending_balance: number;
     paid_amount: number;
     total_earnings: number;
@@ -126,6 +127,7 @@ export async function findOrCreateClipperWithDiscordToken(accessToken: string): 
         payment_info: data.payment_info ?? "",
         bank_no: data.bank_no,
         bank_type: data.bank_type,
+        bank_account_name: data.bank_account_name,
         pending_balance: data.pending_balance ?? 0,
         paid_amount: data.paid_amount ?? 0,
         total_earnings: data.total_earnings ?? 0,
@@ -368,6 +370,7 @@ export async function updateClipperBankWithDiscordToken(input: {
     accessToken: string;
     bank_no: string;
     bank_type: string;
+    bank_account_name: string;
 }) {
     try {
         const data = await fetchBackendWithDiscordAuth(
@@ -378,6 +381,7 @@ export async function updateClipperBankWithDiscordToken(input: {
                 body: JSON.stringify({
                     bank_no: input.bank_no,
                     bank_type: input.bank_type,
+                    bank_account_name: input.bank_account_name,
                 }),
             },
         );
@@ -420,6 +424,7 @@ export async function updateClipperBank(input: {
     discord_id: string;
     bank_no: string;
     bank_type: string;
+    bank_account_name: string;
 }) {
     return proxyConfiguredMutation(
         process.env.PORTAL_BANK_UPDATE_URL,

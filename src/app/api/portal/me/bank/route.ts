@@ -12,13 +12,15 @@ export async function PATCH(request: Request) {
         const body = await request.json().catch(() => null) as {
             bankNo?: string;
             bankType?: string;
+            bankAccountName?: string;
         } | null;
 
         const bankNo = body?.bankNo?.trim();
         const bankType = body?.bankType?.trim();
+        const bankAccountName = body?.bankAccountName?.trim();
 
-        if (!bankNo || !bankType) {
-            return NextResponse.json({ error: "bankNo and bankType are required" }, { status: 400 });
+        if (!bankNo || !bankType || !bankAccountName) {
+            return NextResponse.json({ error: "bankNo, bankType and bankAccountName are required" }, { status: 400 });
         }
 
         const compactBankNo = bankNo.replace(/[\s-]/g, "");
@@ -37,11 +39,13 @@ export async function PATCH(request: Request) {
                 accessToken,
                 bank_no: bankNo,
                 bank_type: bankType,
+                bank_account_name: bankAccountName,
             })
             : await updateClipperBank({
                 discord_id: user.discord_id,
                 bank_no: bankNo,
                 bank_type: bankType,
+                bank_account_name: bankAccountName,
             });
 
         if (accessToken && !result.ok && result.status === 404) {
@@ -49,6 +53,7 @@ export async function PATCH(request: Request) {
                 discord_id: user.discord_id,
                 bank_no: bankNo,
                 bank_type: bankType,
+                bank_account_name: bankAccountName,
             });
 
             if (fallback.configured) {

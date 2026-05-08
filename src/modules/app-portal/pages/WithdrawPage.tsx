@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, CheckCircle2, AlertCircle, Clock, Building2, ArrowDownToLine, Info, XCircle, Ban } from "lucide-react";
+import { Wallet, CheckCircle2, AlertCircle, Clock, Building2, ArrowDownToLine, Info, XCircle, Ban, Save, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { requestJson } from "@/lib/clientApi";
 import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
@@ -11,6 +11,11 @@ import { useMe, usePayouts } from "@/lib/portalApi";
 import type { PayoutResponse } from "@/lib/portalApi";
 import { MOCK_CLIPPER, MOCK_PAYOUTS } from "@/modules/app-portal/mockData";
 import { resolvePortalRole, ROLE_PERMISSIONS } from "@/modules/app-portal/roleConfig";
+
+const BANK_OPTIONS = [
+    "กสิกรไทย (KBANK)", "กรุงเทพ (BBL)", "ไทยพาณิชย์ (SCB)",
+    "กรุงไทย (KTB)", "กรุงศรี (BAY)", "ทีทีบี (TTB)", "ออมสิน", "อาคารสงเคราะห์ (GHB)",
+];
 
 const fmt = (n: number) => new Intl.NumberFormat("th-TH").format(n);
 const fmtDate = (value: string) => new Date(value).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
@@ -61,6 +66,47 @@ export function WithdrawPage() {
     const [submitting, setSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
     const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+
+    const [showBankModal, setShowBankModal] = useState(false);
+    const [modalBankType, setModalBankType] = useState(BANK_OPTIONS[0]);
+    const [modalBankName, setModalBankName] = useState("");
+    const [modalBankNo, setModalBankNo] = useState("");
+    const [modalSaveStatus, setModalSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+    const [modalSaveMessage, setModalSaveMessage] = useState<string | null>(null);
+
+    const isBankComplete = Boolean(clipperData?.bank_no && clipperData?.bank_type && clipperData?.bank_account_name);
+
+    const openBankModal = () => {
+        setModalBankType(clipperData?.bank_type || BANK_OPTIONS[0]);
+        setModalBankName(clipperData?.bank_account_name ?? "");
+        setModalBankNo(clipperData?.bank_no ?? "");
+        setModalSaveStatus("idle");
+        setModalSaveMessage(null);
+        setShowBankModal(true);
+    };
+
+    const handleSaveBankModal = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setModalSaveStatus("saving");
+        setModalSaveMessage(null);
+        try {
+            await requestJson("/api/portal/me/bank", {
+                method: "PATCH",
+                body: JSON.stringify({ bankNo: modalBankNo, bankType: modalBankType, bankAccountName: modalBankName }),
+            });
+            setModalSaveStatus("saved");
+            setModalSaveMessage("อัปเดตบัญชีธนาคารสำเร็จ!");
+            refetchMe();
+            setTimeout(() => {
+                setShowBankModal(false);
+                setModalSaveStatus("idle");
+                setModalSaveMessage(null);
+            }, 1200);
+        } catch (err) {
+            setModalSaveStatus("error");
+            setModalSaveMessage(err instanceof Error ? err.message : "ไม่สามารถบันทึกได้");
+        }
+    };
 
     const pendingBalance = clipperData?.pending_balance ?? 0;
     const parsedAmount = parseInt(amount, 10);
@@ -126,6 +172,7 @@ export function WithdrawPage() {
     const validation = validationMessage();
 
     return (
+        <>
         <div className="space-y-7 pb-12 w-full">
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{w.title}</h1>
@@ -221,27 +268,42 @@ export function WithdrawPage() {
                             </div>
 
                             {(!meLoading || shouldMockMe) && clipperData && (
-                                <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3">
-                                    <div className="w-9 h-9 rounded-xl bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                                        <Building2 size={18} className="text-slate-500 dark:text-slate-400" />
+                                <div
+                                    className={`flex items-center gap-3 rounded-xl px-4 py-3 border transition-colors ${isBankComplete ? "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10" : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-500/15"}`}
+                                    onClick={!isBankComplete ? openBankModal : undefined}
+                                    role={!isBankComplete ? "button" : undefined}
+                                >
+                                    <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${isBankComplete ? "bg-white dark:bg-white/10 border-slate-200 dark:border-white/10" : "bg-amber-100 dark:bg-amber-500/20 border-amber-200 dark:border-amber-500/30"}`}>
+                                        <Building2 size={18} className={isBankComplete ? "text-slate-500 dark:text-slate-400" : "text-amber-600 dark:text-amber-400"} />
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{clipperData.bank_type || "ยังไม่มีบัญชีธนาคาร"}</p>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{clipperData.bank_no || "-"}</p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-sm font-bold ${isBankComplete ? "text-slate-700 dark:text-slate-200" : "text-amber-800 dark:text-amber-300"}`}>
+                                            {clipperData.bank_type || "ยังไม่มีบัญชีธนาคาร"}
+                                        </p>
+                                        {isBankComplete ? (
+                                            <>
+                                                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{clipperData.bank_no}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{clipperData.bank_account_name}</p>
+                                            </>
+                                        ) : (
+                                            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">กดเพื่อเพิ่มบัญชีธนาคาร</p>
+                                        )}
                                     </div>
-                                    {clipperData.bank_no && (
-                                        <div className="ml-auto">
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">{w.verified}</span>
-                                        </div>
+                                    {isBankComplete ? (
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 shrink-0">{w.verified}</span>
+                                    ) : (
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-500/30 text-amber-700 dark:text-amber-300 shrink-0">ต้องกรอก</span>
                                     )}
                                 </div>
                             )}
 
-                            <button type="submit"
-                                disabled={!isValidAmount || submitting || hasPendingRequest || (meLoading && !shouldMockMe) || !clipperData?.bank_no}
+                            <button
+                                type={isBankComplete ? "submit" : "button"}
+                                onClick={!isBankComplete ? openBankModal : undefined}
+                                disabled={isBankComplete && (!isValidAmount || submitting || hasPendingRequest || (meLoading && !shouldMockMe))}
                                 className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
                                 <Wallet size={18} />
-                                {submitting ? w.processing : w.requestWithdrawal}
+                                {submitting ? w.processing : !isBankComplete ? "เพิ่มบัญชีธนาคารก่อนถอนเงิน" : w.requestWithdrawal}
                             </button>
 
                             <AnimatePresence>
@@ -318,5 +380,105 @@ export function WithdrawPage() {
                 </div>
             </div>
         </div>
+
+        <AnimatePresence>
+            {showBankModal && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                    onClick={(e) => { if (e.target === e.currentTarget) setShowBankModal(false); }}
+                >
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl w-full max-w-md"
+                    >
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/8">
+                            <div className="flex items-center gap-2">
+                                <Building2 size={18} className="text-blue-500" />
+                                <h3 className="font-bold text-slate-800 dark:text-slate-100">เพิ่มบัญชีธนาคาร</h3>
+                            </div>
+                            <button onClick={() => setShowBankModal(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 dark:text-slate-500 transition-colors">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="px-6 py-5">
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">กรอกข้อมูลบัญชีธนาคารเพื่อรับเงินค่าถอน</p>
+                            <form onSubmit={handleSaveBankModal} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">ชื่อธนาคาร</label>
+                                    <select
+                                        value={modalBankType}
+                                        onChange={(e) => setModalBankType(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    >
+                                        {BANK_OPTIONS.map((bank) => <option key={bank} value={bank}>{bank}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">ชื่อบัญชี</label>
+                                    <input
+                                        type="text"
+                                        value={modalBankName}
+                                        onChange={(e) => setModalBankName(e.target.value)}
+                                        placeholder="ชื่อ-นามสกุลตามบัญชีธนาคาร"
+                                        required
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">เลขที่บัญชี</label>
+                                    <input
+                                        type="text"
+                                        value={modalBankNo}
+                                        onChange={(e) => setModalBankNo(e.target.value)}
+                                        placeholder="xxx-x-xxxxx-x"
+                                        required
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    />
+                                </div>
+
+                                <AnimatePresence>
+                                    {modalSaveStatus === "saved" && (
+                                        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                            className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-4 py-3 rounded-xl">
+                                            <CheckCircle2 size={15} /> {modalSaveMessage}
+                                        </motion.div>
+                                    )}
+                                    {modalSaveStatus === "error" && (
+                                        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                                            className="flex items-center gap-2 text-sm font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 px-4 py-3 rounded-xl">
+                                            <AlertCircle size={15} /> {modalSaveMessage}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <div className="flex gap-3 pt-1">
+                                    <button
+                                        type="submit"
+                                        disabled={modalSaveStatus === "saving" || modalSaveStatus === "saved"}
+                                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3 rounded-xl transition-colors disabled:opacity-60"
+                                    >
+                                        <Save size={15} />
+                                        {modalSaveStatus === "saving" ? "กำลังบันทึก..." : "บันทึก"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowBankModal(false)}
+                                        className="flex items-center gap-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 font-bold text-sm px-5 py-3 rounded-xl transition-colors"
+                                    >
+                                        <X size={15} /> ยกเลิก
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+        </>
     );
 }
