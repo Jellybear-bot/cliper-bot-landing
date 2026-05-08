@@ -202,6 +202,16 @@ function CampaignCard({
     const clipperBudget = campaign.total_budget * (1 - (campaign.platform_fee_rate ?? 0.3));
     const budgetRemaining = clipperBudget - campaign.budget_spent;
     const budgetProgress = Math.round((campaign.budget_spent / clipperBudget) * 100);
+
+    const t1 = campaign.tier_one_threshold ?? 50000;
+    const t2 = campaign.tier_two_threshold ?? 200000;
+    const t3 = campaign.tier_three_threshold ?? 1000000;
+    function getTierInfo(views: number) {
+        if (views < t1) return { label: "Tier 1", mult: 1.0, color: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400" };
+        if (views < t2) return { label: "Tier 2", mult: campaign.tier_two_mult ?? 0.8, color: "bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-400" };
+        if (views < t3) return { label: "Tier 3", mult: campaign.tier_three_mult ?? 0.6, color: "bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400" };
+        return { label: "Tier 4", mult: campaign.tier_four_mult ?? 0.4, color: "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400" };
+    }
     const viewProgress = Math.round((campaign.total_views_generated / campaign.view_target) * 100);
     const isViewsGrowing = campaign.total_views_generated > 0;
     const isBudgetDepleted = budgetRemaining <= 0;
@@ -523,10 +533,15 @@ function CampaignCard({
                                         </a>
                                         <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{fmtViews(submission.play_count)} {a.campaigns.views}</p>
                                     </div>
-                                    <div className="flex items-center gap-3 shrink-0">
+                                    <div className="flex items-center gap-2 shrink-0">
                                         {submission.calculated_payout > 0 && (
                                             <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">฿{fmt(submission.calculated_payout)}</span>
                                         )}
+                                        {(() => { const tier = getTierInfo(submission.play_count); return (
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${tier.color}`} title={`อัตรา ${(tier.mult * 100).toFixed(0)}% ของ CPM`}>
+                                                {tier.label}
+                                            </span>
+                                        ); })()}
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${getStatusStyle(submission.status)}`}>
                                             {getSubStatusLabel(submission.status)}
                                         </span>

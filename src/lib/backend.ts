@@ -150,6 +150,13 @@ export interface CampaignResponse {
     status: string;
     total_views_generated: number;
     budget_spent: number;
+    tier_one_threshold: number;
+    tier_two_threshold: number;
+    tier_three_threshold: number;
+    tier_two_mult: number;
+    tier_three_mult: number;
+    tier_four_mult: number;
+    max_payout_per_clip_ratio: number;
     created_at: string;
 }
 
