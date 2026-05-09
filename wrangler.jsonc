@@ -32,10 +32,10 @@
   "observability": {
     "enabled": true
   },
-  "custom_domains": [
+  "routes": [
     {
-      "pattern": "clip-hunter.online",
-      "override_existing_dns_record": true
+      "pattern": "clip-hunter.online/*",
+      "zone_name": "clip-hunter.online"
     }
   ]
 }
