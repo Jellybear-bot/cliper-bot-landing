@@ -11,7 +11,7 @@ export function FAQ() {
     { q: "ถ้ายอดวิวไม่ถึงการันตี?", a: "เครือข่ายจะโพสต์เพิ่มฟรีจนกว่าจะถึงยอดที่ตกลงไว้ ถ้ายังไม่ถึงภายใน 30 วันหลังจบแคมเปญ คืนเงินส่วนต่างเต็มจำนวนตามอัตรา cost-per-view ของแพ็กเกจ" },
     { q: "เลือกครีเอเตอร์เองได้ไหม?", a: "สำหรับแพ็กเกจ Million Impact ขึ้นไป สามารถระบุ persona, niche, หรือลิสต์ครีเอเตอร์ที่ต้องการได้ ทีมเราช่วย match ให้ตรงกับ target audience" },
     { q: "ใช้เวลานานแค่ไหนกว่าจะเริ่ม?", a: "ส่งบรีฟวันนี้ — ทีมตอบกลับภายใน 24 ชม. + ครีเอเตอร์เริ่มโพสต์เร็วสุด 48 ชม. หลัง brief approved" },
-    { q: "ใช้แพลตฟอร์มไหนได้บ้าง?", a: "TikTok, Instagram Reels, YouTube Shorts ครบทั้ง 3 แพลตฟอร์มในแคมเปญเดียว ทีมเราจะกระจายให้เหมาะกับ audience ของแต่ละแพลตฟอร์ม" },
+    { q: "ใช้แพลตฟอร์มไหนได้บ้าง?", a: "TikTok และ YouTube Shorts ทั้ง 2 แพลตฟอร์มในแคมเปญเดียว ทีมเราจะกระจายให้เหมาะกับ audience ของแต่ละแพลตฟอร์ม" },
   ];
   return (
     <section id="faq" style={fStyles.root}>
@@ -127,7 +127,7 @@ export function Footer() {
                 <circle cx="6" cy="22" r="2.2" fill={T.orange} />
               </svg>
             </span>
-            <span style={ftStyles.brandName}>CrowdClip Media</span>
+            <span style={ftStyles.brandName}>ClipHunter</span>
           </a>
           <p style={ftStyles.tagline}>
             Performance short-form marketing<br />
@@ -148,13 +148,13 @@ export function Footer() {
         </div>
         <div style={ftStyles.col}>
           <div style={ftStyles.colH}>ติดต่อ</div>
-          <a style={ftStyles.colLink}>hello@crowdclip.media</a>
-          <a style={ftStyles.colLink}>LINE: @crowdclip</a>
+          <a style={ftStyles.colLink}>hello@cliphunter.co</a>
+          <a style={ftStyles.colLink}>LINE: @cliphunter</a>
           <a style={ftStyles.colLink}>02-xxx-xxxx</a>
         </div>
       </div>
       <div style={{ ...ftStyles.bottom, ...(mobile ? ftStyles.bottomMobile : {}) }}>
-        <span>© 2026 ห้างหุ้นส่วนจำกัด คราวด์คลิป มีเดีย · สงวนลิขสิทธิ์</span>
+        <span>© 2026 ClipHunter · สงวนลิขสิทธิ์</span>
         <span>Bangkok, Thailand 🇹🇭</span>
       </div>
     </footer>

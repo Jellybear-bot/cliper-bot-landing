@@ -6,7 +6,7 @@ export default function LegalPage() {
             <div className="max-w-3xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
                 <h1 className="text-3xl font-extrabold mb-3">ข้อมูลกฏหมาย</h1>
                 <p className="text-sm text-slate-600 mb-8">
-                    หน้านี้รวบรวมเอกสารสำคัญเกี่ยวกับการใช้บริการ CrowdClip Media เพื่อให้ผู้ใช้งานและลูกค้าเข้าใจสิทธิ หน้าที่ และแนวทางการคุ้มครองข้อมูลอย่างชัดเจน
+                    หน้านี้รวบรวมเอกสารสำคัญเกี่ยวกับการใช้บริการ ClipHunter เพื่อให้ผู้ใช้งานและลูกค้าเข้าใจสิทธิ หน้าที่ และแนวทางการคุ้มครองข้อมูลอย่างชัดเจน
                 </p>
 
                 <div className="space-y-3">

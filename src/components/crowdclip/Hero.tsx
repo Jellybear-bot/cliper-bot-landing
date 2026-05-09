@@ -4,11 +4,11 @@ import { T, Ico, useMediaQuery } from './tokens';
 
 const CREATORS = [
   { h: "@plearn", v: "84K", c: "#FF4D6D", g: ["#1a0612", "#FF4D6D"] as [string,string], plat: "TT" },
-  { h: "@nichaa", v: "62K", c: "#FF8E3C", g: ["#21100a", "#FF8E3C"] as [string,string], plat: "IG" },
+  { h: "@nichaa", v: "62K", c: "#FF8E3C", g: ["#21100a", "#FF8E3C"] as [string,string], plat: "TT" },
   { h: "@bbest", v: "47K", c: "#FFD23F", g: ["#1f1a08", "#FFD23F"] as [string,string], plat: "TT" },
   { h: "@aomam", v: "39K", c: "#06D6A0", g: ["#062018", "#06D6A0"] as [string,string], plat: "YT" },
   { h: "@khun", v: "31K", c: "#118AB2", g: ["#06141c", "#118AB2"] as [string,string], plat: "TT" },
-  { h: "@minty", v: "28K", c: "#EF476F", g: ["#1c0a14", "#EF476F"] as [string,string], plat: "IG" },
+  { h: "@minty", v: "28K", c: "#EF476F", g: ["#1c0a14", "#EF476F"] as [string,string], plat: "YT" },
   { h: "@joke", v: "24K", c: "#FF6B35", g: ["#1c0e08", "#FF6B35"] as [string,string], plat: "TT" },
   { h: "@noey", v: "19K", c: "#9D4EDD", g: ["#0e0820", "#9D4EDD"] as [string,string], plat: "YT" },
 ];
@@ -67,7 +67,7 @@ export default function Hero() {
 
           <p className="cc-hero-sub" style={{ ...heroStyles.sub, ...(mobile ? heroStyles.subMobile : {}) }}>
             ส่งวิดีโอแบรนด์ของคุณ — ครีเอเตอร์ <b>100+ คน</b> รีมิกซ์
-            และโพสต์พร้อมกันบน TikTok, Reels, Shorts
+            และโพสต์พร้อมกันบน TikTok, YouTube Shorts
             <br />
             <span style={heroStyles.subEm}>จ่ายตามยอดวิวจริงเท่านั้น</span>
           </p>
@@ -89,7 +89,7 @@ export default function Hero() {
             </div>
             <div className="cc-stat-bar" style={{ ...heroStyles.statBar, ...(mobile ? heroStyles.statBarMobile : {}) }} />
             <div style={heroStyles.stat}>
-              <div style={heroStyles.statN}>3</div>
+              <div style={heroStyles.statN}>2</div>
               <div style={heroStyles.statL}>แพลตฟอร์ม</div>
             </div>
             <div className="cc-stat-bar" style={{ ...heroStyles.statBar, ...(mobile ? heroStyles.statBarMobile : {}) }} />
@@ -165,9 +165,6 @@ export default function Hero() {
 
           <div style={{ ...heroStyles.platBadge, top: 24, left: 14, background: "#000", color: "#fff" }}>
             {Ico.tiktok(12)} TikTok
-          </div>
-          <div style={{ ...heroStyles.platBadge, top: 50, right: 8, background: "linear-gradient(135deg,#FF4D6D,#FFD23F)", color: "#fff" }}>
-            {Ico.ig(12)} Reels
           </div>
           <div style={{ ...heroStyles.platBadge, bottom: 38, left: 32, background: "#FF0000", color: "#fff" }}>
             {Ico.yt(12)} Shorts

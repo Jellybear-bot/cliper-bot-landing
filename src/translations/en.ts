@@ -10,7 +10,7 @@ export const en = {
         badge: "Guaranteed Results for B2B & Creators",
         title1: "Dominate Algorithms with",
         title2: "Ant Power",
-        subtitle: "Performance-based short video marketing. Pay only for real views. 1 Million views guaranteed. Our network of 100+ verified clippers edit and distribute your content across TikTok, Shorts, and Reels.",
+        subtitle: "Performance-based short video marketing. Pay only for real views. 1 Million views guaranteed. Our network of 100+ verified clippers edit and distribute your content across TikTok, YouTube Shorts.",
         ctaPrimary: "Free Campaign Consultation",
         ctaSecondary: "How it works"
     },
@@ -18,7 +18,7 @@ export const en = {
         title: "TRUSTED BY BRANDS"
     },
     problemSolution: {
-        title: "Why CrowdClip Media?",
+        title: "Why ClipHunter?",
         subtitle: "Stop burning budget on unpredictable campaigns. Shift to a guaranteed performance model.",
         traditional: {
             title: "Traditional Influencer Marketing",
@@ -27,7 +27,7 @@ export const en = {
             point3: "Unpredictable reach depending on the creator's current engagement rate."
         },
         crowdClip: {
-            title: "CrowdClip Model (Ant Power)",
+            title: "ClipHunter Model (Ant Power)",
             point1: "Cost-effective: Pay only for real views. Zero risk on budget.",
             point2: "100+ Videos simultaneously. Dominating the feed across multiple accounts.",
             point3: "Guaranteed Views. We promise 1 Million views minimum for our popular tier."
@@ -42,7 +42,7 @@ export const en = {
         },
         step2: {
             title: "Step 2: Creators edit & distribute",
-            desc: "Our 100+ verified clippers creatively remix, edit, and post the videos across their active TikTok, Shorts, and Reels accounts."
+            desc: "Our 100+ verified clippers creatively remix, edit, and post the videos across their active TikTok, YouTube Shorts accounts."
         },
         step3: {
             title: "Step 3: Monitor & Go Viral",
@@ -160,12 +160,12 @@ export const en = {
     finalCta: {
         title1: "Ready to Dominate",
         title2: "the Algorithm?",
-        subtitle: "Stop guessing. Start growing. Launch your first performance-based campaign with CrowdClip Media today.",
+        subtitle: "Stop guessing. Start growing. Launch your first performance-based campaign with ClipHunter today.",
         button: "Launch your first campaign"
     },
     footer: {
         desc: "Performance-based short video marketing agency. We distribute content to our network of 100+ creators so you can dominate the algorithms.",
-        company: "CrowdClip Media Ltd.",
+        company: "ClipHunter Ltd.",
         companyLinks: "Company",
         aboutUs: "About Us",
         careers: "Careers",
@@ -176,7 +176,7 @@ export const en = {
         terms: "Terms of Service",
         privacy: "Privacy Policy",
         cookie: "Cookie Policy",
-        rights: "© {year} CrowdClip Media. All rights reserved."
+        rights: "© {year} ClipHunter. All rights reserved."
     },
     app: {
         common: {

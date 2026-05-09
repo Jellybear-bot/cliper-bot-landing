@@ -16,7 +16,7 @@ export default function Footer() {
                             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/25">
                                 C
                             </div>
-                            <span className="text-lg font-bold text-primary">CrowdClip Media</span>
+                            <span className="text-lg font-bold text-primary">ClipHunter</span>
                         </div>
                         <p className="text-sm max-w-sm mb-6 leading-relaxed font-medium text-secondary">
                             {t.footer.desc}

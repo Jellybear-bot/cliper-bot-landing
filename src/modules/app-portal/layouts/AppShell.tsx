@@ -279,7 +279,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-sm">
                             C
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-100">CrowdClip</span>
+                        <span className="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-100">ClipHunter</span>
                     </div>
                     <button
                         onClick={() => setIsSidebarOpen(false)}

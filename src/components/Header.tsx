@@ -19,7 +19,7 @@ export default function Header() {
                         C
                     </div>
                     <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-500">
-                        CrowdClip Media
+                        ClipHunter
                     </span>
                 </div>
 

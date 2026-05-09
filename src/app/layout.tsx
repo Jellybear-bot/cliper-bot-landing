@@ -11,7 +11,7 @@ const notoSansThai = Noto_Sans_Thai({
 })
 
 export const metadata: Metadata = {
-    title: 'CrowdClip Media | The UGC Video Clipping Agency',
+    title: 'ClipHunter | The UGC Video Clipping Agency',
     description: 'Performance-based short video marketing. Pay only for real views. 1 Million views guaranteed.',
 }
 

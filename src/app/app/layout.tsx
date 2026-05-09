@@ -5,7 +5,7 @@ import { LEGACY_PORTAL_SESSION_COOKIE, PORTAL_SESSION_COOKIE } from '@/lib/auth-
 import { AppShell } from '@/modules/app-portal/layouts/AppShell'
 
 export const metadata: Metadata = {
-    title: 'Dashboard | CrowdClip',
+    title: 'Dashboard | ClipHunter',
     description: 'Manage your verified links and campaigns',
 }
 

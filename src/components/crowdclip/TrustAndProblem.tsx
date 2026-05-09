@@ -82,7 +82,7 @@ export function ProblemSolution() {
           {/* Solution */}
           <div className="cc-problem-card cc-problem-card-featured" style={{ ...psStyles.cardS, ...(mobile ? psStyles.cardSMobile : {}) }}>
             <div style={{ ...psStyles.cardHead, ...(mobile ? psStyles.cardHeadMobile : {}) }}>
-              <span style={psStyles.cardChipS}>โมเดล CrowdClip</span>
+              <span style={psStyles.cardChipS}>โมเดล ClipHunter</span>
               <span style={psStyles.cardCost}>30,000 ฿ · 1M views</span>
             </div>
             <h3 style={psStyles.cardH}>ครีเอเตอร์ 100+ คน · พร้อมกัน</h3>

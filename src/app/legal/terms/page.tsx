@@ -7,7 +7,7 @@ export default function TermsPage() {
 
                 <section className="space-y-2">
                     <h2 className="text-lg font-bold">1. การยอมรับเงื่อนไข</h2>
-                    <p className="text-sm leading-relaxed text-slate-700">เมื่อผู้ใช้งานเข้าถึงหรือใช้บริการของ CrowdClip Media ถือว่าผู้ใช้งานได้อ่าน เข้าใจ และยอมรับเงื่อนไขการให้บริการฉบับนี้</p>
+                    <p className="text-sm leading-relaxed text-slate-700">เมื่อผู้ใช้งานเข้าถึงหรือใช้บริการของ ClipHunter ถือว่าผู้ใช้งานได้อ่าน เข้าใจ และยอมรับเงื่อนไขการให้บริการฉบับนี้</p>
                 </section>
 
                 <section className="space-y-2">

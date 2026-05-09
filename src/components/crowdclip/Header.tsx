@@ -18,7 +18,7 @@ export default function Header() {
               <circle cx="6" cy="22" r="2.2" fill={T.orange} />
             </svg>
           </span>
-          <span style={{ ...hStyles.brandWord, ...(compact ? hStyles.brandWordCompact : {}) }}>CrowdClip Media</span>
+          <span style={{ ...hStyles.brandWord, ...(compact ? hStyles.brandWordCompact : {}) }}>ClipHunter</span>
         </a>
         <nav className="cc-header-nav" style={{ ...hStyles.nav, ...(compact ? hStyles.hide : {}) }}>
           <a href="#how" style={hStyles.navLink}>วิธีการทำงาน</a>
