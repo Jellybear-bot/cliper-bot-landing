@@ -31,5 +31,11 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  "custom_domains": [
+    {
+      "pattern": "clip-hunter.online",
+      "override_existing_dns_record": true
+    }
+  ]
 }
