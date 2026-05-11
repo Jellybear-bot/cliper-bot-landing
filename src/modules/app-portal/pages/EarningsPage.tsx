@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { BarChart3, CalendarClock, Eye, Coins } from "lucide-react";
+import { BarChart3, CalendarClock, Eye, Coins, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useSubmissions } from "@/lib/portalApi";
@@ -111,10 +111,15 @@ export function EarningsPage() {
 
     const activeCampaign = visibleCampaigns.find((campaign) => campaign.campaignName === selectedCampaign) ?? visibleCampaigns[0];
 
+    // Compute total across all campaigns for the summary row
+    const grandTotalEarnings = campaigns.reduce((sum, c) => sum + c.totalEarnings, 0);
+    const grandTotalViews = campaigns.reduce((sum, c) => sum + c.totalViews, 0);
+
     return (
         <div className="space-y-7 pb-12 w-full">
+            {/* Page header */}
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{e.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{e.title}</h1>
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{e.subtitle}</p>
             </div>
 
@@ -127,15 +132,41 @@ export function EarningsPage() {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm p-5">
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{e.selectCampaign}</p>
+            {/* Grand totals hero row */}
+            {campaigns.length > 0 && (
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 p-5 text-white shadow-lg shadow-blue-500/20">
+                        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-2xl" aria-hidden />
+                        <div className="relative">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Coins size={16} className="text-blue-200" />
+                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-200">{e.totalEarnings}</p>
+                            </div>
+                            <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-mono">{fmtCurrency(grandTotalEarnings)}</p>
+                            <p className="text-xs text-blue-200/80 font-medium mt-1">{campaigns.length} แคมเปญ</p>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp size={16} className="text-blue-500 dark:text-blue-400" />
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{e.totalViews}</p>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">{fmt(grandTotalViews)}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">สะสมทุกแคมเปญ</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Campaign selector */}
+            <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm p-5">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">{e.selectCampaign}</p>
                 <div className="flex gap-2 flex-wrap">
                     {visibleCampaigns.map((campaign) => (
                         <button
                             key={campaign.campaignName}
                             onClick={() => setSelectedCampaign(campaign.campaignName)}
                             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${selectedCampaign === campaign.campaignName
-                                ? "bg-blue-600 text-white"
+                                ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-sm shadow-blue-500/20"
                                 : "bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"}`}
                         >
                             {campaign.campaignName}
@@ -145,26 +176,48 @@ export function EarningsPage() {
             </div>
 
             {!activeCampaign ? (
-                <div className="text-center py-16 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl">
+                <div className="text-center py-16 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
                     <BarChart3 size={40} className="text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                    <p className="text-slate-500 dark:text-slate-400 font-semibold">{searchQuery ? `No campaigns match "${searchQuery}"` : e.noData}</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-semibold">
+                        {searchQuery ? `No campaigns match "${searchQuery}"` : e.noData}
+                    </p>
                 </div>
             ) : (
                 <>
+                    {/* Per-campaign summary cards */}
                     <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-                        <SummaryCard label={e.totalEarnings} value={fmtCurrency(activeCampaign.totalEarnings)} icon={<Coins size={18} />} color="text-emerald-600 dark:text-emerald-400" />
-                        <SummaryCard label={e.totalViews} value={fmt(activeCampaign.totalViews)} icon={<Eye size={18} />} color="text-blue-600 dark:text-blue-400" />
-                        <SummaryCard label={e.daysActive} value={`${activeCampaign.daysActive}`} icon={<CalendarClock size={18} />} color="text-violet-600 dark:text-violet-400" />
+                        <SummaryCard
+                            label={e.totalEarnings}
+                            value={fmtCurrency(activeCampaign.totalEarnings)}
+                            icon={<Coins size={18} />}
+                            color="text-emerald-600 dark:text-emerald-400"
+                            monospace
+                        />
+                        <SummaryCard
+                            label={e.totalViews}
+                            value={fmt(activeCampaign.totalViews)}
+                            icon={<Eye size={18} />}
+                            color="text-blue-600 dark:text-blue-400"
+                        />
+                        <SummaryCard
+                            label={e.daysActive}
+                            value={`${activeCampaign.daysActive}`}
+                            icon={<CalendarClock size={18} />}
+                            color="text-violet-600 dark:text-violet-400"
+                        />
                         <SummaryCard
                             label={e.avgPerDay}
                             value={fmtCurrency(Math.round(activeCampaign.totalEarnings / Math.max(1, activeCampaign.daysActive)))}
                             icon={<BarChart3 size={18} />}
                             color="text-amber-600 dark:text-amber-400"
+                            monospace
                         />
                     </div>
 
-                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
-                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/8">
+                    {/* Daily growth table */}
+                    <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/8 flex items-center gap-2">
+                            <BarChart3 size={16} className="text-slate-400 dark:text-slate-500" />
                             <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{e.dailyGrowth}</h2>
                         </div>
                         <div className="overflow-x-auto">
@@ -184,9 +237,9 @@ export function EarningsPage() {
                                             <td className="px-5 py-3 font-semibold text-slate-700 dark:text-slate-200">
                                                 {new Date(row.day).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
                                             </td>
-                                            <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">+{fmtCurrency(row.earnings)}</td>
+                                            <td className="px-5 py-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">+{fmtCurrency(row.earnings)}</td>
                                             <td className="px-5 py-3 text-right font-bold text-blue-600 dark:text-blue-400">+{fmt(row.views)}</td>
-                                            <td className="px-5 py-3 text-right font-semibold text-slate-700 dark:text-slate-200">{fmtCurrency(row.cumulativeEarnings)}</td>
+                                            <td className="px-5 py-3 text-right font-semibold text-slate-700 dark:text-slate-200 font-mono">{fmtCurrency(row.cumulativeEarnings)}</td>
                                             <td className="px-5 py-3 text-right font-semibold text-slate-700 dark:text-slate-200">{fmt(row.cumulativeViews)}</td>
                                         </tr>
                                     ))}
@@ -200,21 +253,17 @@ export function EarningsPage() {
     );
 }
 
-function SummaryCard({
-    label,
-    value,
-    icon,
-    color,
-}: {
+function SummaryCard({ label, value, icon, color, monospace }: {
     label: string;
     value: string;
     icon: React.ReactNode;
     color: string;
+    monospace?: boolean;
 }) {
     return (
-        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
             <div className={`w-9 h-9 rounded-xl bg-slate-50 dark:bg-white/10 ${color} flex items-center justify-center mb-3`}>{icon}</div>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{value}</p>
+            <p className={`text-2xl font-extrabold text-slate-900 dark:text-slate-100 ${monospace ? "font-mono" : ""}`}>{value}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
         </div>
     );

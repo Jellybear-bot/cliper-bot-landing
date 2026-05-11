@@ -31,9 +31,9 @@ function getPayoutStatusStyle(status: string) {
 
 function BalanceSkeleton() {
     return (
-        <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-7 shadow-lg animate-pulse">
-            <div className="h-4 bg-white/20 rounded w-32 mb-2" />
-            <div className="h-12 bg-white/30 rounded w-48 mb-1" />
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-violet-700 p-7 shadow-xl shadow-blue-500/20 animate-pulse">
+            <div className="h-4 bg-white/20 rounded w-32 mb-3" />
+            <div className="h-14 bg-white/30 rounded w-48 mb-2" />
             <div className="h-3 bg-white/20 rounded w-56" />
         </div>
     );
@@ -174,10 +174,11 @@ export function WithdrawPage() {
     return (
         <>
         <div className="space-y-7 pb-12 w-full">
+            {/* Page header */}
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{w.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{w.title}</h1>
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{w.subtitle}</p>
-                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-3 py-1.5">
+                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-full px-3 py-1.5 shadow-sm">
                     <span className={`w-2 h-2 rounded-full ${role === "vip" ? "bg-amber-400" : "bg-slate-400 dark:bg-slate-500"}`} />
                     Role: {role.toUpperCase()} · ถอนขั้นต่ำ ฿{fmt(minWithdrawAmount)}
                 </div>
@@ -195,19 +196,28 @@ export function WithdrawPage() {
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div className="xl:col-span-2 space-y-5">
+                    {/* Balance hero card — Var A gradient */}
                     {meLoading && !shouldMockMe ? <BalanceSkeleton /> : (
-                        <div className="bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl p-7 text-white shadow-lg">
-                            <p className="text-sm font-semibold text-blue-200 mb-1">{w.availableBalance}</p>
-                            <p className="text-5xl font-extrabold mb-1">฿{fmt(pendingBalance)}</p>
-                            <p className="text-blue-300 text-sm font-medium">{w.minNote} (ขั้นต่ำ ฿{fmt(minWithdrawAmount)})</p>
-                            <div className="mt-5 pt-5 border-t border-white/20 flex items-center gap-6 text-sm">
-                                <div>
-                                    <p className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-0.5">{w.totalEarned}</p>
-                                    <p className="font-bold text-white">฿{fmt(clipperData?.total_earnings ?? 0)}</p>
+                        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-violet-700 text-white shadow-xl shadow-blue-500/20">
+                            {/* decorative blobs */}
+                            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-violet-400/30 blur-3xl" aria-hidden />
+                            <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full bg-blue-300/20 blur-3xl" aria-hidden />
+                            <div className="relative p-7">
+                                <div className="flex items-center gap-2 text-blue-200 mb-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    <p className="text-xs font-bold uppercase tracking-[0.18em]">{w.availableBalance}</p>
                                 </div>
-                                <div>
-                                    <p className="text-blue-300 text-xs font-bold uppercase tracking-wider mb-0.5">{w.totalPaidOut}</p>
-                                    <p className="font-bold text-white">฿{fmt(clipperData?.paid_amount ?? 0)}</p>
+                                <p className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-none font-mono">฿{fmt(pendingBalance)}</p>
+                                <p className="text-blue-200 text-sm font-medium mt-2">{w.minNote} (ขั้นต่ำ ฿{fmt(minWithdrawAmount)})</p>
+                                <div className="mt-6 pt-6 border-t border-white/15 grid grid-cols-2 gap-6">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-blue-200/80 uppercase tracking-wider mb-1">{w.totalEarned}</p>
+                                        <p className="text-lg font-extrabold font-mono">฿{fmt(clipperData?.total_earnings ?? 0)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-blue-200/80 uppercase tracking-wider mb-1">{w.totalPaidOut}</p>
+                                        <p className="text-lg font-extrabold font-mono">฿{fmt(clipperData?.paid_amount ?? 0)}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -223,43 +233,69 @@ export function WithdrawPage() {
                         </div>
                     )}
 
-                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm p-6">
+                    {/* Withdrawal form */}
+                    <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm p-6">
                         <h2 className="font-bold text-slate-800 dark:text-slate-100 mb-5 flex items-center gap-2">
                             <ArrowDownToLine size={18} className="text-slate-400 dark:text-slate-500" />
                             {w.requestWithdrawal}
                         </h2>
                         <form onSubmit={handleWithdraw} className="space-y-5">
+                            {/* Quick preset amounts */}
                             <div>
                                 <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{w.quickSelect}</p>
                                 <div className="flex gap-2 flex-wrap">
                                     {PRESET_AMOUNTS.map((preset) => (
-                                        <button key={preset} type="button" onClick={() => setAmount(String(preset))}
+                                        <button
+                                            key={preset}
+                                            type="button"
+                                            onClick={() => setAmount(String(preset))}
                                             disabled={preset > pendingBalance}
-                                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${amount === String(preset) ? "bg-blue-600 text-white border-blue-600" : preset > pendingBalance ? "bg-slate-50 dark:bg-white/5 text-slate-300 dark:text-slate-600 border-slate-200 dark:border-white/10 cursor-not-allowed" : "bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"}`}>
+                                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
+                                                amount === String(preset)
+                                                    ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white border-transparent shadow-sm"
+                                                    : preset > pendingBalance
+                                                    ? "bg-slate-50 dark:bg-white/5 text-slate-300 dark:text-slate-600 border-slate-200 dark:border-white/10 cursor-not-allowed"
+                                                    : "bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"
+                                            }`}
+                                        >
                                             ฿{fmt(preset)}
                                         </button>
                                     ))}
-                                    <button type="button"
+                                    <button
+                                        type="button"
                                         onClick={() => setAmount(String(Math.floor(pendingBalance)))}
                                         disabled={pendingBalance < 100}
-                                        className="px-4 py-2 rounded-xl text-sm font-bold border bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                        className="px-4 py-2 rounded-xl text-sm font-bold border bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
                                         {w.max}
                                     </button>
                                 </div>
                             </div>
 
+                            {/* Amount input */}
                             <div>
                                 <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{w.amountLabel}</p>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400 dark:text-slate-500">฿</span>
-                                    <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
-                                        min={minWithdrawAmount} step={1} max={Math.floor(pendingBalance)} placeholder="0"
-                                        className="w-full pl-8 pr-4 py-3.5 text-xl font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400 dark:text-slate-500 font-mono">฿</span>
+                                    <input
+                                        type="number"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        min={minWithdrawAmount}
+                                        step={1}
+                                        max={Math.floor(pendingBalance)}
+                                        placeholder="0"
+                                        className="w-full pl-8 pr-4 py-3.5 text-xl font-extrabold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono"
+                                    />
                                 </div>
                                 <AnimatePresence>
                                     {validation && (
-                                        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                            className={`flex items-center gap-2 text-xs font-semibold mt-2 ${validation.type === "ok" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -4 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            className={`flex items-center gap-2 text-xs font-semibold mt-2 ${validation.type === "ok" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
+                                        >
                                             {validation.type === "ok" ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
                                             {validation.text}
                                         </motion.div>
@@ -267,13 +303,22 @@ export function WithdrawPage() {
                                 </AnimatePresence>
                             </div>
 
+                            {/* Bank account display */}
                             {(!meLoading || shouldMockMe) && clipperData && (
                                 <div
-                                    className={`flex items-center gap-3 rounded-xl px-4 py-3 border transition-colors ${isBankComplete ? "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10" : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-500/15"}`}
+                                    className={`flex items-center gap-3 rounded-xl px-4 py-3 border transition-colors ${
+                                        isBankComplete
+                                            ? "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10"
+                                            : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-500/15"
+                                    }`}
                                     onClick={!isBankComplete ? openBankModal : undefined}
                                     role={!isBankComplete ? "button" : undefined}
                                 >
-                                    <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${isBankComplete ? "bg-white dark:bg-white/10 border-slate-200 dark:border-white/10" : "bg-amber-100 dark:bg-amber-500/20 border-amber-200 dark:border-amber-500/30"}`}>
+                                    <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
+                                        isBankComplete
+                                            ? "bg-white dark:bg-white/10 border-slate-200 dark:border-white/10"
+                                            : "bg-amber-100 dark:bg-amber-500/20 border-amber-200 dark:border-amber-500/30"
+                                    }`}>
                                         <Building2 size={18} className={isBankComplete ? "text-slate-500 dark:text-slate-400" : "text-amber-600 dark:text-amber-400"} />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -282,7 +327,7 @@ export function WithdrawPage() {
                                         </p>
                                         {isBankComplete ? (
                                             <>
-                                                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{clipperData.bank_no}</p>
+                                                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium font-mono">{clipperData.bank_no}</p>
                                                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{clipperData.bank_account_name}</p>
                                             </>
                                         ) : (
@@ -297,11 +342,13 @@ export function WithdrawPage() {
                                 </div>
                             )}
 
+                            {/* Submit button */}
                             <button
                                 type={isBankComplete ? "submit" : "button"}
                                 onClick={!isBankComplete ? openBankModal : undefined}
                                 disabled={isBankComplete && (!isValidAmount || submitting || hasPendingRequest || (meLoading && !shouldMockMe))}
-                                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 text-white font-bold py-3.5 rounded-xl transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-blue-500/20"
+                            >
                                 <Wallet size={18} />
                                 {submitting ? w.processing : !isBankComplete ? "เพิ่มบัญชีธนาคารก่อนถอนเงิน" : w.requestWithdrawal}
                             </button>
@@ -324,8 +371,10 @@ export function WithdrawPage() {
                     </div>
                 </div>
 
+                {/* Right sidebar */}
                 <div className="space-y-5">
-                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
+                    {/* Withdrawal rules */}
+                    <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
                         <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-4 flex items-center gap-2">
                             <Info size={16} className="text-slate-400 dark:text-slate-500" /> {w.rulesTitle}
                         </h3>
@@ -339,7 +388,8 @@ export function WithdrawPage() {
                         </ul>
                     </div>
 
-                    <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+                    {/* Payout history */}
+                    <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-slate-100 dark:border-white/8">
                             <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{w.history}</h3>
                         </div>
@@ -364,7 +414,7 @@ export function WithdrawPage() {
                                     return (
                                         <div key={payout.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/60 dark:hover:bg-white/5 transition-colors">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">฿{fmt(payout.amount)}</p>
+                                                <p className="text-sm font-extrabold text-slate-700 dark:text-slate-200 font-mono">฿{fmt(payout.amount)}</p>
                                                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{fmtDate(payout.created_at)}</p>
                                                 {payout.reason && <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-0.5">{payout.reason}</p>}
                                             </div>
@@ -381,6 +431,7 @@ export function WithdrawPage() {
             </div>
         </div>
 
+        {/* Bank account modal */}
         <AnimatePresence>
             {showBankModal && (
                 <motion.div
@@ -401,7 +452,10 @@ export function WithdrawPage() {
                                 <Building2 size={18} className="text-blue-500" />
                                 <h3 className="font-bold text-slate-800 dark:text-slate-100">เพิ่มบัญชีธนาคาร</h3>
                             </div>
-                            <button onClick={() => setShowBankModal(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 dark:text-slate-500 transition-colors">
+                            <button
+                                onClick={() => setShowBankModal(false)}
+                                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 dark:text-slate-500 transition-colors"
+                            >
                                 <X size={18} />
                             </button>
                         </div>
@@ -460,7 +514,7 @@ export function WithdrawPage() {
                                     <button
                                         type="submit"
                                         disabled={modalSaveStatus === "saving" || modalSaveStatus === "saved"}
-                                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3 rounded-xl transition-colors disabled:opacity-60"
+                                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 text-white font-bold text-sm py-3 rounded-xl transition-opacity disabled:opacity-60"
                                     >
                                         <Save size={15} />
                                         {modalSaveStatus === "saving" ? "กำลังบันทึก..." : "บันทึก"}

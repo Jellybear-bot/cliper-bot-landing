@@ -29,7 +29,7 @@ function getStatusStyle(status: string) {
 
 function CampaignSkeleton() {
     return (
-        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm animate-pulse">
+        <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm animate-pulse">
             <div className="flex items-start gap-4 mb-5">
                 <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-white/10 shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -83,17 +83,19 @@ export function CampaignsPage() {
 
     return (
         <div className="space-y-8 pb-12 w-full">
+            {/* Page header */}
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{c.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{c.title}</h1>
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{c.subtitle}</p>
-                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-3 py-1.5">
+                <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-full px-3 py-1.5 shadow-sm">
                     <span className={`w-2 h-2 rounded-full ${role === "vip" ? "bg-amber-400" : "bg-slate-400 dark:bg-slate-500"}`} />
                     Role: {role.toUpperCase()} · ส่งได้สูงสุด {rolePermissions.dailySubmissionLimit} วิดีโอ/วัน
                 </div>
             </div>
 
+            {/* How it works */}
             <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl p-5">
-                <p className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-2">{c.howItWorks}</p>
+                <p className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-3">{c.howItWorks}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                     {[c.step1, c.step2, c.step3].map((text, i) => (
                         <div key={i} className="flex items-center gap-3">
@@ -115,17 +117,22 @@ export function CampaignsPage() {
                 </div>
             )}
 
+            {/* Active campaigns */}
             <div>
                 <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    {c.activeCampaigns} {(!loading || shouldMockCampaigns) && `(${activeCampaigns.length})`}
+                    {c.activeCampaigns} {(!loading || shouldMockCampaigns) && (
+                        <span className="text-sm font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-md">
+                            {activeCampaigns.length}
+                        </span>
+                    )}
                 </h2>
                 <div className="space-y-4">
                     {loading && !shouldMockCampaigns ? (
                         Array.from({ length: 2 }).map((_, i) => <CampaignSkeleton key={i} />)
                     ) : activeCampaigns.length === 0 ? (
-                        <div className="text-center py-12 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl">
-                            <Megaphone size={36} className="text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                        <div className="text-center py-16 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
+                            <Megaphone size={36} className="text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                             <p className="text-slate-400 dark:text-slate-500 font-medium">
                                 {searchQuery ? `No active campaigns match "${searchQuery}"` : "ไม่มีแคมเปญที่เปิดรับในขณะนี้"}
                             </p>
@@ -145,16 +152,17 @@ export function CampaignsPage() {
                 </div>
             </div>
 
+            {/* Completed campaigns */}
             {completedCampaigns.length > 0 && (
                 <div>
                     <h2 className="text-lg font-bold text-slate-500 dark:text-slate-500 mb-4">{c.completedCampaigns}</h2>
                     <div className="space-y-3">
                         {completedCampaigns.map((campaign) => (
-                            <div key={campaign.id} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 opacity-60">
+                            <div key={campaign.id} className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl p-5 opacity-60 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-bold text-slate-600 dark:text-slate-300">{campaign.campaign_name}</p>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500">{campaign.client_name}</p>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{campaign.client_name}</p>
                                         {(campaign.campaign_description?.trim()) && (
                                             <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
                                                 {campaign.campaign_description}
@@ -275,8 +283,9 @@ function CampaignCard({
     };
 
     return (
-        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
             <div className="p-6">
+                {/* Campaign header */}
                 <div className="flex items-start justify-between gap-4 mb-5">
                     <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-500/20 dark:to-violet-500/20 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center shrink-0">
@@ -284,7 +293,7 @@ function CampaignCard({
                         </div>
                         <div>
                             <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-lg leading-tight">{campaign.campaign_name}</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{campaign.client_name}</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-0.5">{campaign.client_name}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -299,6 +308,7 @@ function CampaignCard({
                     </div>
                 </div>
 
+                {/* Campaign details box */}
                 <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 dark:border-blue-500/20 dark:bg-blue-500/10">
                     <div className="mb-2 flex items-center gap-2 text-blue-800 dark:text-blue-300">
                         <FileText size={16} />
@@ -309,6 +319,7 @@ function CampaignCard({
                     </p>
                 </div>
 
+                {/* Stats grid */}
                 <div className="grid grid-cols-3 gap-4 mb-5">
                     <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-3 text-center border border-slate-100 dark:border-white/8">
                         <div className="flex items-center justify-center gap-1 text-slate-400 dark:text-slate-500 mb-1">
@@ -325,7 +336,9 @@ function CampaignCard({
                             <Target size={14} />
                             <span className="text-[10px] font-bold uppercase tracking-wider">{c.budgetLeft}</span>
                         </div>
-                        <p className={`text-xl font-extrabold ${isBudgetDepleted ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>฿{fmt(budgetRemaining)}</p>
+                        <p className={`text-xl font-extrabold ${isBudgetDepleted ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                            ฿{fmt(budgetRemaining)}
+                        </p>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">of ฿{fmt(clipperBudget)}</p>
                     </div>
                     <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-3 text-center border border-slate-100 dark:border-white/8">
@@ -338,11 +351,13 @@ function CampaignCard({
                     </div>
                 </div>
 
+                {/* Progress bars */}
                 <div className="space-y-2.5 mb-5">
-                    <ProgressBar label={c.budgetUsed} progress={budgetProgress} color="bg-violet-500" />
+                    <ProgressBar label={c.budgetUsed} progress={budgetProgress} color="bg-gradient-to-r from-blue-500 to-violet-500" />
                     <ProgressBar label={c.viewTarget} progress={viewProgress} color="bg-emerald-500" />
                 </div>
 
+                {/* Action buttons */}
                 <div className="flex items-center gap-3 flex-wrap">
                     {campaign.campaign_material_link && (
                         <a
@@ -359,7 +374,7 @@ function CampaignCard({
                             <button
                                 onClick={openDetailsBeforeSubmit}
                                 disabled={!canJoinCampaign}
-                                className="flex items-center gap-2 text-sm font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 dark:hover:bg-blue-500/25 border border-blue-200 dark:border-blue-500/20 px-4 py-2 rounded-xl transition-colors"
+                                className="flex items-center gap-2 text-sm font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 dark:hover:bg-blue-500/25 border border-blue-200 dark:border-blue-500/20 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
                             >
                                 <LinkIcon size={15} /> {c.submitAnotherVideo}
                             </button>
@@ -377,7 +392,7 @@ function CampaignCard({
                         <button
                             onClick={openDetailsBeforeSubmit}
                             disabled={!canJoinCampaign}
-                            className="flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 px-5 py-2.5 rounded-xl transition-opacity shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 px-5 py-2.5 rounded-xl transition-opacity shadow-sm shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Megaphone size={15} /> {canJoinCampaign ? c.joinCampaign : "สำหรับ VIP เท่านั้น"}
                         </button>
@@ -391,6 +406,7 @@ function CampaignCard({
                 )}
             </div>
 
+            {/* Details modal */}
             <AnimatePresence>
                 {showDetailsModal && (
                     <motion.div
@@ -457,7 +473,7 @@ function CampaignCard({
                                 <button
                                     type="button"
                                     onClick={acknowledgeDetailsAndOpenForm}
-                                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+                                    className="rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90"
                                 >
                                     {c.readDetailsConfirm}
                                 </button>
@@ -467,6 +483,7 @@ function CampaignCard({
                 )}
             </AnimatePresence>
 
+            {/* Join form */}
             <AnimatePresence>
                 {showJoinForm && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
@@ -487,7 +504,7 @@ function CampaignCard({
                                 <button
                                     type="submit"
                                     disabled={submitting || !videoUrl}
-                                    className="flex items-center gap-2 font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 shrink-0"
+                                    className="flex items-center gap-2 font-bold text-sm bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 text-white px-5 py-2.5 rounded-xl transition-opacity disabled:opacity-50 shrink-0"
                                 >
                                     <Send size={15} />
                                     {submitting ? a.common.submitting : a.common.submit}
@@ -512,6 +529,7 @@ function CampaignCard({
                 )}
             </AnimatePresence>
 
+            {/* My submitted videos */}
             <AnimatePresence>
                 {showMyVideos && mySubmissions.length > 0 && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
@@ -535,7 +553,7 @@ function CampaignCard({
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
                                         {submission.calculated_payout > 0 && (
-                                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">฿{fmt(submission.calculated_payout)}</span>
+                                            <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">฿{fmt(submission.calculated_payout)}</span>
                                         )}
                                         {(() => { const tier = getTierInfo(submission.play_count); return (
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${tier.color}`} title={`อัตรา ${(tier.mult * 100).toFixed(0)}% ของ CPM`}>

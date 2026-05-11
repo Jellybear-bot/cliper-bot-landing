@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Video, Eye, DollarSign, ThumbsUp, MessageCircle, Share2, ExternalLink } from "lucide-react";
+import { Video, Eye, DollarSign, ThumbsUp, MessageCircle, Share2, ExternalLink, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import { useSubmissions } from "@/lib/portalApi";
@@ -89,8 +89,9 @@ export function SubmissionsPage() {
 
     return (
         <div className="space-y-7 pb-12 w-full">
+            {/* Page header */}
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{s.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-1">{s.title}</h1>
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{s.subtitle}</p>
             </div>
 
@@ -103,23 +104,54 @@ export function SubmissionsPage() {
                 </div>
             )}
 
+            {/* Summary cards — Var A style */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <SummaryCard label={s.totalSubmitted} value={loading && !shouldMockSubmissions ? "..." : String(searched.length)} icon={<Video size={18} />} iconBg="bg-slate-100 dark:bg-white/10" iconColor="text-slate-600 dark:text-slate-300" />
-                <SummaryCard label={s.activeEarning} value={loading && !shouldMockSubmissions ? "..." : String(activeCount)} icon={<Eye size={18} />} iconBg="bg-emerald-100 dark:bg-emerald-500/20" iconColor="text-emerald-600 dark:text-emerald-400" />
-                <SummaryCard label={s.totalViews} value={loading && !shouldMockSubmissions ? "..." : fmtViews(totalViews)} icon={<Eye size={18} />} iconBg="bg-blue-100 dark:bg-blue-500/20" iconColor="text-blue-600 dark:text-blue-400" />
-                <SummaryCard label={s.totalEarnings} value={loading && !shouldMockSubmissions ? "..." : `฿${fmt(totalEarnings)}`} icon={<DollarSign size={18} />} iconBg="bg-violet-100 dark:bg-violet-500/20" iconColor="text-violet-600 dark:text-violet-400" />
+                <SummaryCard
+                    label={s.totalSubmitted}
+                    value={loading && !shouldMockSubmissions ? "..." : String(searched.length)}
+                    icon={<Video size={18} />}
+                    iconBg="bg-slate-100 dark:bg-white/10"
+                    iconColor="text-slate-600 dark:text-slate-300"
+                />
+                <SummaryCard
+                    label={s.activeEarning}
+                    value={loading && !shouldMockSubmissions ? "..." : String(activeCount)}
+                    icon={<Eye size={18} />}
+                    iconBg="bg-emerald-100 dark:bg-emerald-500/20"
+                    iconColor="text-emerald-600 dark:text-emerald-400"
+                />
+                <SummaryCard
+                    label={s.totalViews}
+                    value={loading && !shouldMockSubmissions ? "..." : fmtViews(totalViews)}
+                    icon={<Eye size={18} />}
+                    iconBg="bg-blue-100 dark:bg-blue-500/20"
+                    iconColor="text-blue-600 dark:text-blue-400"
+                />
+                <SummaryCard
+                    label={s.totalEarnings}
+                    value={loading && !shouldMockSubmissions ? "..." : `฿${fmt(totalEarnings)}`}
+                    icon={<DollarSign size={18} />}
+                    iconBg="bg-violet-100 dark:bg-violet-500/20"
+                    iconColor="text-violet-600 dark:text-violet-400"
+                    valueClass="text-emerald-600 dark:text-emerald-400 font-mono"
+                />
             </div>
 
+            {/* Segmented filter bar */}
             <div className="flex gap-2 flex-wrap">
                 {FILTERS.map((filter) => {
                     const count = searched.filter(filter.match).length;
+                    const isActive = activeFilter === filter.key;
                     return (
-                        <button key={filter.key} onClick={() => setActiveFilter(filter.key)}
-                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeFilter === filter.key
-                                ? "bg-blue-600 text-white shadow-sm"
-                                : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"}`}>
+                        <button
+                            key={filter.key}
+                            onClick={() => setActiveFilter(filter.key)}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isActive
+                                ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-sm shadow-blue-500/20"
+                                : "bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400"}`}
+                        >
                             {filter.label}
-                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${activeFilter === filter.key ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400"}`}>
+                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${isActive ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400"}`}>
                                 {loading ? "-" : count}
                             </span>
                         </button>
@@ -127,23 +159,30 @@ export function SubmissionsPage() {
                 })}
             </div>
 
+            {/* Submissions list */}
             <div className="space-y-3">
                 {loading && !shouldMockSubmissions ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+                        <div key={i} className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
                             <SkeletonRow />
                         </div>
                     ))
                 ) : filtered.length === 0 ? (
-                    <div className="text-center py-16 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl">
+                    <div className="text-center py-16 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
                         <Video size={40} className="text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                        <p className="text-slate-500 dark:text-slate-400 font-semibold">{searchQuery ? `No submissions match "${searchQuery}"` : s.noSubmissions}</p>
+                        <p className="text-slate-500 dark:text-slate-400 font-semibold">
+                            {searchQuery ? `No submissions match "${searchQuery}"` : s.noSubmissions}
+                        </p>
                         {!searchQuery && <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">{s.noSubmissionsSub}</p>}
                     </div>
                 ) : (
                     filtered.map((submission) => (
-                        <SubmissionCard key={submission.id} submission={submission}
-                            getStatusLabel={getStatusLabel} getStatusDesc={getStatusDesc} />
+                        <SubmissionCard
+                            key={submission.id}
+                            submission={submission}
+                            getStatusLabel={getStatusLabel}
+                            getStatusDesc={getStatusDesc}
+                        />
                     ))
                 )}
             </div>
@@ -161,15 +200,24 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
     const [expanded, setExpanded] = useState(false);
 
     return (
-        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
-            <div className="flex items-center gap-4 p-5 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-white/5 transition-colors" onClick={() => setExpanded(!expanded)}>
-                <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0">
-                    <Video size={20} className="text-slate-500 dark:text-slate-400" />
+        <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+            <div
+                className="flex items-center gap-4 p-5 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-white/5 transition-colors"
+                onClick={() => setExpanded(!expanded)}
+            >
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-500/20 dark:to-violet-500/20 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center shrink-0">
+                    <Video size={20} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                         <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{sub.video_url.replace("https://", "")}</p>
-                        <a href={sub.video_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors shrink-0">
+                        <a
+                            href={sub.video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors shrink-0"
+                        >
                             <ExternalLink size={13} />
                         </a>
                     </div>
@@ -186,11 +234,12 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
                         {getStatusLabel(sub.status)}
                     </span>
                     {sub.calculated_payout > 0 ? (
-                        <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">฿{fmt(sub.calculated_payout)}</span>
+                        <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">฿{fmt(sub.calculated_payout)}</span>
                     ) : (
                         <span className="text-xs text-slate-300 dark:text-slate-600 font-medium">฿0</span>
                     )}
                 </div>
+                <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
             </div>
 
             {expanded && (
@@ -207,7 +256,7 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
                     {sub.calculated_payout > 0 && (
                         <div className="mt-3 flex items-center justify-between bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl px-4 py-3">
                             <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{s.totalEarningsFromVideo}</span>
-                            <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-400">฿{fmt(sub.calculated_payout)}</span>
+                            <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">฿{fmt(sub.calculated_payout)}</span>
                         </div>
                     )}
                 </div>
@@ -216,11 +265,18 @@ function SubmissionCard({ submission: sub, getStatusLabel, getStatusDesc }: {
     );
 }
 
-function SummaryCard({ label, value, icon, iconBg, iconColor }: { label: string; value: string; icon: React.ReactNode; iconBg: string; iconColor: string }) {
+function SummaryCard({ label, value, icon, iconBg, iconColor, valueClass }: {
+    label: string;
+    value: string;
+    icon: React.ReactNode;
+    iconBg: string;
+    iconColor: string;
+    valueClass?: string;
+}) {
     return (
-        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
             <div className={`w-9 h-9 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center mb-3`}>{icon}</div>
-            <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">{value}</p>
+            <p className={`text-2xl font-extrabold ${valueClass ?? "text-slate-900 dark:text-slate-100"}`}>{value}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
         </div>
     );
