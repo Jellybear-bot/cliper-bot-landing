@@ -23,6 +23,7 @@ const fmtViews = (n: number) => {
 
 // ── Sparkline (SVG polyline) ──────────────────────────────────────────────────
 function Spark({ data, height = 36, width = 160 }: { data: number[]; height?: number; width?: number }) {
+    if (data.length < 2) return <svg width={width} height={height} />;
     const max = Math.max(...data);
     const min = Math.min(...data);
     const span = max - min || 1;
@@ -43,7 +44,7 @@ function Spark({ data, height = 36, width = 160 }: { data: number[]; height?: nu
 // ── Bar chart (SVG rects) ─────────────────────────────────────────────────────
 interface BarsDatum { e: number }
 function Bars({ data, height = 64, width = 280 }: { data: BarsDatum[]; height?: number; width?: number }) {
-    const max = Math.max(...data.map((d) => d.e));
+    const max = Math.max(...data.map((d) => d.e)) || 1;
     const bw = width / data.length - 2;
     return (
         <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="overflow-visible">
