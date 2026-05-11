@@ -2,10 +2,7 @@
 
 import { ReactNode, startTransition, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    LayoutDashboard, Settings, LogOut, Search, Bell, Menu, X,
-    Megaphone, Video, Wallet, CheckCheck, BarChart3, Sun, Moon, Plus,
-} from "lucide-react";
+import { CheckCheck, Sun, Moon, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { mockLogout } from "@/modules/app-portal/services/auth/actions";
@@ -89,12 +86,32 @@ function buildNotifications({ language, campaigns, submissions, payouts }: {
 
 const mergeReadIds = (current: string[], incoming: string[]) => Array.from(new Set([...current, ...incoming]));
 
+// Nav tabs order matching var-a.jsx exactly
+const TOP_NAV_KEYS = ["overview", "campaigns", "submissions", "earnings", "withdraw", "settings"] as const;
+type NavKey = typeof TOP_NAV_KEYS[number];
+
+const NAV_HREFS: Record<NavKey, string> = {
+    overview: "/app/overview",
+    campaigns: "/app/campaigns",
+    submissions: "/app/submissions",
+    earnings: "/app/earnings",
+    withdraw: "/app/withdraw",
+    settings: "/app/settings",
+};
+
+function pathnameToNavKey(pathname: string): NavKey | null {
+    for (const key of TOP_NAV_KEYS) {
+        if (pathname === NAV_HREFS[key] || pathname.startsWith(NAV_HREFS[key] + "/")) {
+            return key;
+        }
+    }
+    return null;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [isNotiOpen, setIsNotiOpen] = useState(false);
     const [roleOverride, setRoleOverride] = useState<PortalRole | null>(null);
     const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
@@ -104,6 +121,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     const { t, language, setLanguage } = useLanguage();
     const { isDark, toggle: toggleDark } = useTheme();
     const a = t.app;
+
+    const activeTab = pathnameToNavKey(pathname);
 
     const { data: me, loading: meLoading, error: meError } = useMe();
     const { data: campaigns, loading: campaignsLoading, error: campaignsError } = useCampaigns();
@@ -174,134 +193,128 @@ export function AppShell({ children }: { children: ReactNode }) {
         setIsNotiOpen(false);
     }
 
-    const SIDEBAR_NAV = [
-        { href: '/app/overview', icon: <LayoutDashboard size={20} />, label: a.nav.overview },
-        { href: '/app/campaigns', icon: <Megaphone size={20} />, label: a.nav.campaigns },
-        { href: '/app/earnings', icon: <BarChart3 size={20} />, label: a.nav.earnings },
-        { href: '/app/submissions', icon: <Video size={20} />, label: a.nav.submissions },
-        { href: '/app/withdraw', icon: <Wallet size={20} />, label: a.nav.withdraw },
-        { href: '/app/settings', icon: <Settings size={20} />, label: a.nav.settings },
-    ];
-
-    // Mobile bottom tab — 5 items with center "Submit" as FAB
-    const MOBILE_NAV_LEFT = [
-        { href: '/app/overview', icon: <LayoutDashboard size={20} />, label: a.nav.overview },
-        { href: '/app/campaigns', icon: <Megaphone size={20} />, label: a.nav.campaigns },
-    ];
-    const MOBILE_NAV_RIGHT = [
-        { href: '/app/withdraw', icon: <Wallet size={20} />, label: a.nav.withdraw },
-        { href: '/app/settings', icon: <Settings size={20} />, label: a.nav.settings },
-    ];
-
     const profileName = clipperData?.username ?? "Portal User";
     const profileStatus = clipperData?.status ?? (FORCE_PORTAL_MOCK_MODE ? "Mock Mode" : "Connecting");
     const profileInitials = profileName.split(/\s+/).filter(Boolean).slice(0, 2)
         .map((v) => v[0]?.toUpperCase() ?? "").join("") || "PU";
+    const isVip = profileStatus.toLowerCase().includes("vip") || (clipperData?.payment_info ?? "").toLowerCase().includes("role:vip");
+
+    const navLabels: Record<NavKey, string> = {
+        overview: a.nav.overview,
+        campaigns: a.nav.campaigns,
+        submissions: a.nav.submissions,
+        earnings: a.nav.earnings,
+        withdraw: a.nav.withdraw,
+        settings: a.nav.settings,
+    };
 
     return (
-        <div className="flex bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 h-screen overflow-hidden font-sans">
-            <AnimatePresence>
-                {isSidebarOpen && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 bg-slate-900/50 dark:bg-black/70 z-40 lg:hidden backdrop-blur-sm" />
-                )}
-            </AnimatePresence>
-
-            <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-white/[0.04] dark:backdrop-blur-xl border-r border-slate-200 dark:border-white/10 flex flex-col transform transition-transform duration-300 ease-in-out lg:transform-none ${isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}>
-                <div className="h-16 flex items-center px-6 border-b border-slate-100 dark:border-white/8 shrink-0">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/30">C</div>
-                        <span className="font-extrabold text-lg tracking-tight text-slate-800 dark:text-slate-100">ClipHunter</span>
-                    </div>
-                    <button onClick={() => setIsSidebarOpen(false)} className="ml-auto lg:hidden text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300">
-                        <X size={20} />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto py-6 px-4">
-                    <p className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">{a.common.menu}</p>
-                    <nav className="space-y-1">
-                        {SIDEBAR_NAV.map((item) => (
-                            <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label}
-                                active={pathname === item.href} onClick={() => setIsSidebarOpen(false)} />
-                        ))}
-                    </nav>
-                </div>
-
-                <div className="p-4 border-t border-slate-100 dark:border-white/8 shrink-0">
-                    <form action={mockLogout}>
-                        <button type="submit" className="flex items-center gap-3 w-full px-4 py-3 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors group font-medium text-sm">
-                            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-                            <span>{a.common.signOut}</span>
-                        </button>
-                    </form>
-                </div>
-            </aside>
-
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                <header className="h-14 sm:h-16 bg-white/85 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 flex items-center justify-between px-3 sm:px-6 shrink-0 z-30 relative">
-                    <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                        <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 -ml-1 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <Menu size={22} />
-                        </button>
-
-                        {/* Mobile logo */}
-                        <Link href="/app/overview" className="lg:hidden flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center font-bold text-white text-sm shadow-sm">C</div>
-                            <span className="font-extrabold text-base text-slate-800 dark:text-slate-100">ClipHunter</span>
+        <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F1A] text-slate-900 dark:text-slate-100">
+            {/* TOP NAV — Desktop */}
+            <header className="sticky top-0 z-20 bg-white/80 dark:bg-[#0B0F1A]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/[0.08]">
+                <div className="px-8 h-16 flex items-center justify-between">
+                    {/* Left: logo + nav tabs */}
+                    <div className="flex items-center gap-10">
+                        {/* Logo */}
+                        <Link href="/app/overview" className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-blue-600/30">
+                                C
+                            </div>
+                            <span className="font-extrabold tracking-tight text-slate-900 dark:text-slate-100">ClipHunter</span>
                         </Link>
 
-                        {/* Desktop search */}
-                        <div className="hidden sm:flex relative group max-w-md w-full">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search size={16} className="text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-                            </div>
-                            <input type="text" value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)}
-                                placeholder={a.common.searchPlaceholder}
-                                className="w-80 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium" />
-                        </div>
+                        {/* Desktop nav tabs — hidden on mobile */}
+                        <nav className="hidden lg:flex items-center gap-1">
+                            {TOP_NAV_KEYS.map((key) => (
+                                <Link
+                                    key={key}
+                                    href={NAV_HREFS[key]}
+                                    className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition ${
+                                        activeTab === key
+                                            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
+                                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                    }`}
+                                >
+                                    {navLabels[key]}
+                                </Link>
+                            ))}
+                        </nav>
                     </div>
 
-                    <div className="flex items-center gap-1 sm:gap-3">
-                        {/* Mobile search trigger */}
-                        <button onClick={() => setIsMobileSearchOpen(true)} className="sm:hidden p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
-                            <Search size={20} />
-                        </button>
-
-                        {PORTAL_ROLE_OVERRIDE_ENABLED && (
-                            <div className="hidden md:flex items-center gap-1 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-1">
-                                <button onClick={() => handleSetRole("member")}
-                                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "member" ? "bg-slate-700 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`} title="Switch local test role to member">MEMBER</button>
-                                <button onClick={() => handleSetRole("vip")}
-                                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${roleOverride === "vip" ? "bg-amber-500 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`} title="Switch local test role to vip">VIP</button>
-                            </div>
-                        )}
-
-                        <div className="hidden sm:flex items-center rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-                            <button onClick={() => setLanguage("th")} className={`px-3 py-1.5 text-xs font-bold transition-all ${language === "th" ? "bg-blue-600 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>TH</button>
-                            <button onClick={() => setLanguage("en")} className={`px-3 py-1.5 text-xs font-bold transition-all ${language === "en" ? "bg-blue-600 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>EN</button>
+                    {/* Right: search + controls + bell + user */}
+                    <div className="flex items-center gap-3">
+                        {/* Search input — hidden on small mobile */}
+                        <div className="relative hidden sm:block">
+                            <input
+                                value={searchQuery}
+                                onChange={(e) => handleSearchChange(e.target.value)}
+                                placeholder={a.common.searchPlaceholder}
+                                className="h-9 w-56 pl-9 pr-3 rounded-lg bg-slate-100 dark:bg-white/5 border border-transparent text-sm focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-white/10 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition"
+                            />
+                            <svg className="absolute left-2.5 top-2.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="7" />
+                                <path d="m21 21-4.3-4.3" />
+                            </svg>
                         </div>
 
-                        <button onClick={toggleDark} className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors" title={isDark ? "Switch to light mode" : "Switch to dark mode"}>
+                        {/* Lang switcher */}
+                        <div className="hidden sm:flex items-center rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5">
+                            <button onClick={() => setLanguage("th")} className={`px-2.5 py-1 text-xs font-bold transition-all ${language === "th" ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>TH</button>
+                            <button onClick={() => setLanguage("en")} className={`px-2.5 py-1 text-xs font-bold transition-all ${language === "en" ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>EN</button>
+                        </div>
+
+                        {/* Dark mode toggle */}
+                        <button
+                            onClick={toggleDark}
+                            className="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors"
+                            title={isDark ? "Light mode" : "Dark mode"}
+                        >
                             {isDark ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
 
+                        {/* Role override (dev only) */}
+                        {PORTAL_ROLE_OVERRIDE_ENABLED && (
+                            <div className="hidden md:flex items-center gap-1 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 p-0.5">
+                                <button onClick={() => handleSetRole("member")}
+                                    className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all ${roleOverride === "member" ? "bg-slate-700 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>MEMBER</button>
+                                <button onClick={() => handleSetRole("vip")}
+                                    className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all ${roleOverride === "vip" ? "bg-amber-500 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>VIP</button>
+                            </div>
+                        )}
+
+                        {/* Bell */}
                         <div className="relative" ref={notiRef}>
-                            <button onClick={() => setIsNotiOpen((v) => !v)} className="relative p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
-                                <Bell size={20} />
+                            <button
+                                onClick={() => setIsNotiOpen((v) => !v)}
+                                className="relative w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-center text-slate-600 dark:text-slate-400 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                                </svg>
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-rose-500 rounded-full border-2 border-white dark:border-slate-950 flex items-center justify-center text-[9px] font-bold text-white leading-none">{unreadCount}</span>
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#0B0F1A]" />
                                 )}
                             </button>
                             <AnimatePresence>
                                 {isNotiOpen && (
-                                    <motion.div initial={{ opacity: 0, y: 6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6, scale: 0.97 }} transition={{ duration: 0.15 }}
-                                        className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900/95 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-black/50 overflow-hidden z-50">
-                                        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/8">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900/95 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-black/50 overflow-hidden z-50"
+                                    >
+                                        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/[0.08]">
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{language === "th" ? "การแจ้งเตือน" : "Notifications"}</h3>
-                                                {unreadCount > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">{unreadCount} {language === "th" ? "ใหม่" : "new"}</span>}
+                                                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                                                    {language === "th" ? "การแจ้งเตือน" : "Notifications"}
+                                                </h3>
+                                                {unreadCount > 0 && (
+                                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">
+                                                        {unreadCount} {language === "th" ? "ใหม่" : "new"}
+                                                    </span>
+                                                )}
                                             </div>
                                             {unreadCount > 0 && (
                                                 <button onClick={markAllRead} className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
@@ -311,9 +324,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                                         </div>
                                         <div className="max-h-80 overflow-y-auto divide-y divide-slate-50 dark:divide-white/5">
                                             {notifications.length === 0 ? (
-                                                <p className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">{language === "th" ? "ยังไม่มีการแจ้งเตือน" : "No notifications yet"}</p>
+                                                <p className="px-4 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
+                                                    {language === "th" ? "ยังไม่มีการแจ้งเตือน" : "No notifications yet"}
+                                                </p>
                                             ) : (
-                                                notifications.map((n) => <NotiItem key={n.id} noti={n} onRead={() => markNotificationRead(n.id)} />)
+                                                notifications.map((n) => (
+                                                    <NotiItem key={n.id} noti={n} onRead={() => markNotificationRead(n.id)} />
+                                                ))
                                             )}
                                         </div>
                                     </motion.div>
@@ -321,63 +338,99 @@ export function AppShell({ children }: { children: ReactNode }) {
                             </AnimatePresence>
                         </div>
 
-                        <div className="h-6 w-px bg-slate-200 dark:bg-white/10 hidden sm:block" />
+                        {/* Divider */}
+                        <div className="h-6 w-px bg-slate-200 dark:bg-white/10" />
 
-                        <Link href="/app/settings" className="flex items-center gap-3 cursor-pointer group rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 p-1 sm:p-1.5 sm:pr-2 transition-colors">
-                            <div className="hidden sm:block text-right">
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-none mb-1">{profileName}</p>
-                                <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider leading-none">{profileStatus}</p>
+                        {/* User avatar + name */}
+                        <Link href="/app/settings" className="flex items-center gap-2.5 cursor-pointer group rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 p-1 pr-2 transition-colors">
+                            <div className="text-right leading-tight">
+                                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{profileName}</p>
+                                <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                                    {isVip ? "VIP" : "Member"}
+                                </p>
                             </div>
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-blue-500/30">{profileInitials}</div>
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow">
+                                {profileInitials}
+                            </div>
                         </Link>
+
+                        {/* Sign out (mobile hidden, accessible via settings) */}
+                        <form action={mockLogout} className="hidden">
+                            <button type="submit" />
+                        </form>
                     </div>
-                </header>
+                </div>
+            </header>
 
-                {/* Mobile search overlay */}
-                <AnimatePresence>
-                    {isMobileSearchOpen && (
-                        <motion.div initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -60, opacity: 0 }}
-                            className="sm:hidden absolute top-14 inset-x-0 z-40 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-white/10 p-3 flex items-center gap-2 shadow-md">
-                            <div className="flex-1 relative">
-                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input autoFocus type="text" value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)}
-                                    placeholder={a.common.searchPlaceholder}
-                                    className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                            </div>
-                            <button onClick={() => setIsMobileSearchOpen(false)} className="p-2 text-slate-500 dark:text-slate-400">
-                                <X size={20} />
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+            {/* Main content */}
+            <main className="w-full pb-20 lg:pb-0">
+                <div className="px-4 sm:px-8 py-8 max-w-[1280px] mx-auto">
+                    {children}
+                </div>
+            </main>
 
-                <main className="flex-1 overflow-y-auto w-full pb-20 lg:pb-0">
-                    <div className="w-full p-4 sm:p-6 lg:p-8">{children}</div>
-                </main>
-
-                {/* Mobile bottom nav with center FAB */}
-                <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
-                    <div className="flex items-end justify-around gap-1 max-w-md mx-auto">
-                        {MOBILE_NAV_LEFT.map((item) => <BottomTab key={item.href} {...item} active={pathname === item.href} />)}
-                        <Link href="/app/submissions" className="flex flex-col items-center -mt-6">
-                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/40 ${pathname === '/app/submissions' ? 'ring-4 ring-blue-500/20' : ''}`}>
-                                <Plus size={26} strokeWidth={2.5} />
-                            </div>
-                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-1">{a.nav.submissions}</span>
-                        </Link>
-                        {MOBILE_NAV_RIGHT.map((item) => <BottomTab key={item.href} {...item} active={pathname === item.href} />)}
+            {/* Mobile bottom tab bar — visible only on small screens */}
+            <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 mx-auto max-w-[390px] px-3 pb-3 pt-2 bg-white dark:bg-[#0B0F1A]/95 border-t border-slate-100 dark:border-white/10 backdrop-blur-xl flex justify-around">
+                {/* Home */}
+                <MobileTab
+                    href="/app/overview"
+                    active={pathname === "/app/overview"}
+                    label={language === "th" ? "ภาพรวม" : "Overview"}
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M3 12 12 3l9 9M5 10v10h14V10" />
+                        </svg>
+                    }
+                />
+                {/* Campaigns */}
+                <MobileTab
+                    href="/app/campaigns"
+                    active={pathname === "/app/campaigns"}
+                    label={language === "th" ? "แคมเปญ" : "Campaigns"}
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M3 11l18-5v12L3 13z" />
+                        </svg>
+                    }
+                />
+                {/* Submit FAB — center */}
+                <Link href="/app/submissions" className="flex flex-col items-center gap-0.5 relative -mt-6">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/50">
+                        <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
                     </div>
-                </nav>
-            </div>
+                </Link>
+                {/* Earnings */}
+                <MobileTab
+                    href="/app/earnings"
+                    active={pathname === "/app/earnings"}
+                    label={language === "th" ? "รายได้" : "Earnings"}
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M3 3v18h18M7 14l4-4 4 4 5-5" />
+                        </svg>
+                    }
+                />
+                {/* Profile / Settings */}
+                <MobileTab
+                    href="/app/settings"
+                    active={pathname === "/app/settings"}
+                    label={language === "th" ? "ฉัน" : "Me"}
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+                        </svg>
+                    }
+                />
+            </nav>
         </div>
     );
 }
 
-function BottomTab({ href, icon, label, active }: { href: string; icon: ReactNode; label: string; active: boolean }) {
+function MobileTab({ href, active, label, icon }: { href: string; active: boolean; label: string; icon: React.ReactNode }) {
     return (
-        <Link href={href} className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-xl transition-colors ${active ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400"}`}>
-            <div>{icon}</div>
-            <span className={`text-[10px] ${active ? "font-bold" : "font-semibold"}`}>{label}</span>
+        <Link href={href} className="flex flex-col items-center gap-0.5 px-3 py-1">
+            <span className={active ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"}>{icon}</span>
+            <span className={`text-[9px] font-bold ${active ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"}`}>{label}</span>
         </Link>
     );
 }
@@ -395,22 +448,4 @@ function NotiItem({ noti, onRead }: { noti: Notification; onRead: () => void }) 
         </div>
     );
     return noti.href ? <Link href={noti.href}>{content}</Link> : <>{content}</>;
-}
-
-function NavItem({ href, icon, label, active, onClick }: { href: string; icon: ReactNode; label: string; active?: boolean; onClick?: () => void; }) {
-    return (
-        <Link href={href} onClick={onClick}>
-            <div className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-xl transition-all duration-200 relative group cursor-pointer ${active
-                ? "text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-500/15"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-white/5 font-medium"}`}>
-                <div className={`transition-colors duration-200 ${active ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}>{icon}</div>
-                <span className="text-sm">{label}</span>
-                {active && (
-                    <motion.div layoutId="nav-active-indicator"
-                        className="w-1 h-5 rounded-r-full bg-blue-600 dark:bg-blue-400 absolute left-0 top-1/2 -translate-y-1/2"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-                )}
-            </div>
-        </Link>
-    );
 }
