@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { fetchClipperStats } from "@/lib/backend";
-import { getSessionUser } from "@/lib/session";
+import { fetchClipperStats, findOrCreateClipperWithDiscordToken } from "@/lib/backend";
+import { getDiscordAccessToken, getSessionUser } from "@/lib/session";
 
 export async function GET() {
     const user = getSessionUser();
@@ -9,7 +9,17 @@ export async function GET() {
     }
 
     try {
-        const stats = await fetchClipperStats(user.discord_id);
+        let discordId = user.discord_id;
+
+        const accessToken = getDiscordAccessToken();
+        if (accessToken) {
+            const clipper = await findOrCreateClipperWithDiscordToken(accessToken).catch(() => null);
+            if (clipper?.discord_id) discordId = clipper.discord_id;
+        }
+
+        console.log("[/api/portal/stats] querying clipper_id:", discordId);
+        const stats = await fetchClipperStats(discordId);
+        console.log("[/api/portal/stats] result:", JSON.stringify(stats).slice(0, 200));
         return NextResponse.json(stats);
     } catch (err) {
         console.error("[/api/portal/stats]", err);
