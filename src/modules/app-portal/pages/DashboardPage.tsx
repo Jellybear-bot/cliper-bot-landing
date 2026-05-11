@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
-import { useCampaigns, useMe, usePayouts, useSubmissions } from "@/lib/portalApi";
+import { useCampaigns, useMe, usePayouts, useStats, useSubmissions } from "@/lib/portalApi";
 import type { CampaignResponse, SubmissionResponse } from "@/lib/portalApi";
 import { FORCE_PORTAL_MOCK_MODE, shouldUsePortalMockData } from "@/lib/portalConfig";
 import {
@@ -66,9 +66,9 @@ function Bars({ data, height = 64, width = 280 }: { data: BarsDatum[]; height?: 
     );
 }
 
-// ── Static sparkline / bar data ───────────────────────────────────────────────
-const SPARKLINE_DATA = [12, 18, 22, 28, 35, 31, 44, 52, 49, 61, 68, 74, 81, 92, 88, 104];
-const DAILY_DATA: BarsDatum[] = [
+// ── Fallback static data (shown while stats load) ────────────────────────────
+const FALLBACK_SPARKLINE = [12, 18, 22, 28, 35, 31, 44, 52, 49, 61, 68, 74, 81, 92, 88, 104];
+const FALLBACK_DAILY: BarsDatum[] = [
     { e: 48 }, { e: 112 }, { e: 180 }, { e: 248 }, { e: 352 }, { e: 496 },
     { e: 640 }, { e: 840 }, { e: 960 }, { e: 1152 }, { e: 1280 }, { e: 1420 },
     { e: 1600 }, { e: 1928 },
@@ -115,6 +115,7 @@ export function DashboardPage() {
     const { data: campaigns, loading: _cl, error: campaignsError } = useCampaigns();
     const { data: submissions, loading: _sl, error: subsError } = useSubmissions();
     const { data: _payouts, loading: _pl, error: payoutsError } = usePayouts();
+    const { data: stats } = useStats();
 
     const shouldMockMe = shouldUsePortalMockData(Boolean(meError) && !meLoading);
     const shouldMockCampaigns = shouldUsePortalMockData(Boolean(campaignsError));
@@ -216,17 +217,17 @@ export function DashboardPage() {
 
                     <div className="relative">
                         {/* Ready label */}
-                        <div className="flex items-center gap-2 text-blue-200 mb-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <p className="text-xs font-bold uppercase tracking-[0.18em]">{label.pending}</p>
+                        <div className="flex items-center gap-2 text-blue-200 mb-3">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <p className="text-sm font-bold uppercase tracking-[0.2em]">{label.pending}</p>
                         </div>
 
                         {/* Balance */}
-                        <p className="text-[68px] font-black tracking-tighter leading-none mt-2 font-mono" style={{ fontFeatureSettings: '"tnum"' }}>
+                        <p className="text-[52px] font-black tracking-tight leading-none font-mono" style={{ fontFeatureSettings: '"tnum"' }}>
                             ฿{meLoading && !shouldMockMe ? "—" : fmt(pending)}
-                            <span className="text-3xl text-blue-200 font-bold">.00</span>
+                            <span className="text-2xl text-blue-200/80 font-semibold">.00</span>
                         </p>
-                        <p className="text-sm text-blue-100/80 font-medium mt-2">{label.pendingSub}</p>
+                        <p className="text-base text-blue-100/70 font-medium mt-3">{label.pendingSub}</p>
 
                         {/* CTA */}
                         <div className="flex items-center gap-3 mt-7">
@@ -270,9 +271,11 @@ export function DashboardPage() {
                             <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500">{label.todayEarning}</p>
                             <span className="text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">+12.4%</span>
                         </div>
-                        <p className="text-3xl font-black tracking-tight mt-2 font-mono">฿428</p>
+                        <p className="text-3xl font-black tracking-tight mt-2 font-mono">
+                            {stats ? `฿${fmt(stats.today_earnings)}` : "—"}
+                        </p>
                         <div className="mt-3 -mx-1 text-emerald-500">
-                            <Spark data={SPARKLINE_DATA} height={32} width={160} />
+                            <Spark data={stats ? stats.daily.map(d => d.earnings) : FALLBACK_SPARKLINE} height={32} width={160} />
                         </div>
                     </div>
 
@@ -283,34 +286,37 @@ export function DashboardPage() {
                             <span className="text-xl">🔥</span>
                         </div>
                         <p className="text-3xl font-black tracking-tight mt-2 font-mono">
-                            12<span className="text-base text-slate-400 font-bold ml-1">{label.streakDays}</span>
+                            {stats?.streak_days ?? "—"}<span className="text-base text-slate-400 font-bold ml-1">{label.streakDays}</span>
                         </p>
                         <div className="flex gap-1 mt-3">
                             {Array.from({ length: 7 }).map((_, i) => (
-                                <div key={i} className={`flex-1 h-2 rounded-full ${i < 5 ? "bg-amber-400" : "bg-slate-200 dark:bg-white/10"}`} />
+                                <div key={i} className={`flex-1 h-2 rounded-full ${i < Math.min(stats?.streak_days ?? 0, 7) ? "bg-amber-400" : "bg-slate-200 dark:bg-white/10"}`} />
                             ))}
                         </div>
                     </div>
 
                     {/* Monthly earnings — full width */}
-                    <div className="col-span-2 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                            <div>
-                                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500">{label.earningsThisMonth}</p>
-                                <p className="text-2xl font-black tracking-tight mt-1 font-mono">฿{fmt(8920)}</p>
+                    {(() => {
+                        const dailyData = stats ? stats.daily.map(d => ({ e: d.earnings })) : FALLBACK_DAILY;
+                        const monthTotal = stats ? stats.daily.reduce((s, d) => s + d.earnings, 0) : 8920;
+                        return (
+                            <div className="col-span-2 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500">{label.earningsThisMonth}</p>
+                                        <p className="text-2xl font-black tracking-tight mt-1 font-mono">฿{fmt(monthTotal)}</p>
+                                    </div>
+                                </div>
+                                <div className="text-blue-600 dark:text-blue-400">
+                                    <Bars data={dailyData} height={64} width={280} />
+                                </div>
+                                <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
+                                    <span>14d ago</span>
+                                    <span>today</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
-                                ↗ +28%
-                            </div>
-                        </div>
-                        <div className="text-blue-600 dark:text-blue-400">
-                            <Bars data={DAILY_DATA} height={64} width={280} />
-                        </div>
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
-                            <span>14d ago</span>
-                            <span>today</span>
-                        </div>
-                    </div>
+                        );
+                    })()}
                 </div>
             </div>
 

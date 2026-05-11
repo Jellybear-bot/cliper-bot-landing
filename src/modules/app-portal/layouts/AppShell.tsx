@@ -272,15 +272,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                             {isDark ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
 
-                        {/* Role override (dev only) */}
-                        {PORTAL_ROLE_OVERRIDE_ENABLED && (
-                            <div className="hidden md:flex items-center gap-1 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 p-0.5">
-                                <button onClick={() => handleSetRole("member")}
-                                    className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all ${roleOverride === "member" ? "bg-slate-700 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>MEMBER</button>
-                                <button onClick={() => handleSetRole("vip")}
-                                    className={`px-2 py-0.5 text-[11px] font-bold rounded-md transition-all ${roleOverride === "vip" ? "bg-amber-500 text-white" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"}`}>VIP</button>
-                            </div>
-                        )}
 
                         {/* Bell */}
                         <div className="relative" ref={notiRef}>
@@ -370,7 +361,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </main>
 
             {/* Mobile bottom tab bar — visible only on small screens */}
-            <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 mx-auto max-w-[390px] px-3 pb-3 pt-2 bg-white dark:bg-[#0B0F1A]/95 border-t border-slate-100 dark:border-white/10 backdrop-blur-xl flex justify-around">
+            <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-3 pt-2 bg-white dark:bg-[#0B0F1A]/95 border-t border-slate-100 dark:border-white/10 backdrop-blur-xl flex justify-around">
                 {/* Home */}
                 <MobileTab
                     href="/app/overview"

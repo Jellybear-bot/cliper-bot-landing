@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .font-mono {
+    font-family: var(--font-mono), 'IBM Plex Mono', ui-monospace, monospace !important;
+  }
+}
+
 /* ── Design tokens — Light ────────────────────────────────────────────── */
 :root {
   --background: #f8fafc;

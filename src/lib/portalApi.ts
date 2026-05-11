@@ -59,3 +59,19 @@ export function useSubmissions() {
 export function usePayouts() {
     return useFetch<PayoutResponse[]>("/api/portal/payouts");
 }
+
+export interface DailyPoint {
+    date: string;
+    views: number;
+    earnings: number;
+}
+
+export interface StatsResponse {
+    daily: DailyPoint[];
+    today_earnings: number;
+    streak_days: number;
+}
+
+export function useStats() {
+    return useFetch<StatsResponse>("/api/portal/stats");
+}

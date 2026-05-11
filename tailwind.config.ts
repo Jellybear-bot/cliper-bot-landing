@@ -10,6 +10,9 @@ const config: Config = {
     darkMode: 'class',
     theme: {
         extend: {
+            fontFamily: {
+                mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+            },
             colors: {
                 background: 'var(--background)',
                 foreground: 'var(--foreground)',

@@ -446,6 +446,29 @@ export async function createPayoutRequest(input: {
     );
 }
 
+// ─── Clipper Stats ───────────────────────────────────────────────────────────
+
+export interface DailyPoint {
+    date: string;
+    views: number;
+    earnings: number;
+}
+
+export interface ClipperStatsResponse {
+    daily: DailyPoint[];
+    today_earnings: number;
+    streak_days: number;
+}
+
+export async function fetchClipperStats(discordId: string): Promise<ClipperStatsResponse> {
+    const res = await fetch(`${BACKEND_URL}/api/clipper-stats?clipper_id=${encodeURIComponent(discordId)}`, {
+        headers: authHeaders,
+        cache: "no-store",
+    });
+    if (!res.ok) throw await buildFetchError("fetchClipperStats", res);
+    return res.json();
+}
+
 export async function submitBrandInquiry(input: {
     firstName: string;
     lastName: string;
