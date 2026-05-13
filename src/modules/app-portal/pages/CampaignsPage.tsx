@@ -20,10 +20,11 @@ const fmtViews = (n: number) => {
 };
 
 function getStatusStyle(status: string) {
-    if (status.includes("🟢")) return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400";
-    if (status.includes("⏳")) return "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400";
-    if (status.includes("🔴") || status.includes("❌")) return "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400";
-    if (status.includes("📉")) return "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400";
+    const normalized = status.toLowerCase();
+    if (status.includes("🔴") || status.includes("❌") || normalized.includes("reject") || normalized.includes("declin") || normalized.includes("denied")) return "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400";
+    if (status.includes("🟢") || normalized.includes("active") || normalized.includes("approved") || normalized.includes("complete") || normalized.includes("done")) return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400";
+    if (status.includes("⏳") || normalized.includes("pending") || normalized.includes("review")) return "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400";
+    if (status.includes("📉") || normalized.includes("growing") || normalized.includes("waiting") || normalized.includes("gaining")) return "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400";
     return "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400";
 }
 
@@ -239,10 +240,12 @@ function CampaignCard({
     }
 
     function getSubStatusLabel(status: string) {
-        if (status.includes("🟢 Active")) return a.status.activeEarning;
-        if (status.includes("⏳")) return a.status.pendingReview;
-        if (status.includes("📉")) return a.status.gainingViews;
-        if (status.includes("🔴")) return a.status.rejected;
+        const normalized = status.toLowerCase();
+        if (status.includes("🔴") || status.includes("❌") || normalized.includes("reject") || normalized.includes("declin") || normalized.includes("denied")) return a.status.rejected;
+        if (normalized.includes("complete") || normalized.includes("done") || normalized.includes("finished")) return a.common.completed;
+        if (status.includes("🟢") || normalized.includes("active") || normalized.includes("approved")) return a.status.activeEarning;
+        if (status.includes("⏳") || normalized.includes("pending") || normalized.includes("review")) return a.status.pendingReview;
+        if (status.includes("📉") || normalized.includes("growing") || normalized.includes("waiting") || normalized.includes("gaining")) return a.status.gainingViews;
         return status;
     }
 

@@ -294,7 +294,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 6, scale: 0.97 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900/95 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-black/50 overflow-hidden z-50"
+                                        className="fixed sm:absolute inset-x-2 sm:inset-x-auto sm:right-0 top-[65px] sm:top-full sm:mt-2 sm:w-96 bg-white dark:bg-slate-900/95 dark:backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-black/50 overflow-hidden z-50"
                                     >
                                         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/[0.08]">
                                             <div className="flex items-center gap-2">

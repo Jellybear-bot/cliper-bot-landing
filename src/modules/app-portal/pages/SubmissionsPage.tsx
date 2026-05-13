@@ -17,10 +17,11 @@ const fmtViews = (n: number) => {
 };
 
 function getStatusStyle(status: string) {
-    if (status.includes("🟢")) return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
-    if (status.includes("⏳")) return "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
-    if (status.includes("🔴") || status.includes("❌")) return "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
-    if (status.includes("📉")) return "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20";
+    const normalized = status.toLowerCase();
+    if (status.includes("🔴") || status.includes("❌") || normalized.includes("reject") || normalized.includes("declin") || normalized.includes("denied")) return "bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
+    if (status.includes("🟢") || normalized.includes("active") || normalized.includes("approved") || normalized.includes("complete") || normalized.includes("done")) return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
+    if (status.includes("⏳") || normalized.includes("pending") || normalized.includes("review")) return "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
+    if (status.includes("📉") || normalized.includes("growing") || normalized.includes("waiting") || normalized.includes("gaining")) return "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20";
     return "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10";
 }
 
@@ -56,27 +57,30 @@ export function SubmissionsPage() {
     const list = shouldMockSubmissions ? MOCK_SUBMISSIONS : (submissions ?? []);
 
     function getStatusLabel(status: string) {
-        if (status.includes("🟢 Active")) return a.status.activeEarning;
-        if (status.includes("⏳")) return a.status.pendingReview;
-        if (status.includes("📉")) return a.status.gainingViews;
-        if (status.includes("🔴")) return a.status.rejected;
+        const normalized = status.toLowerCase();
+        if (status.includes("🔴") || status.includes("❌") || normalized.includes("reject") || normalized.includes("declin") || normalized.includes("denied")) return a.status.rejected;
+        if (normalized.includes("complete") || normalized.includes("done") || normalized.includes("finished")) return a.common.completed;
+        if (status.includes("🟢") || normalized.includes("active") || normalized.includes("approved")) return a.status.activeEarning;
+        if (status.includes("⏳") || normalized.includes("pending") || normalized.includes("review")) return a.status.pendingReview;
+        if (status.includes("📉") || normalized.includes("growing") || normalized.includes("waiting") || normalized.includes("gaining")) return a.status.gainingViews;
         return status;
     }
 
     function getStatusDesc(status: string) {
-        if (status.includes("🟢")) return s.statusDesc.active;
-        if (status.includes("⏳")) return s.statusDesc.pending;
-        if (status.includes("📉")) return s.statusDesc.waiting;
-        if (status.includes("🔴")) return s.statusDesc.rejected;
+        const normalized = status.toLowerCase();
+        if (status.includes("🔴") || status.includes("❌") || normalized.includes("reject") || normalized.includes("declin") || normalized.includes("denied")) return s.statusDesc.rejected;
+        if (status.includes("🟢") || normalized.includes("active") || normalized.includes("approved") || normalized.includes("complete") || normalized.includes("done")) return s.statusDesc.active;
+        if (status.includes("⏳") || normalized.includes("pending") || normalized.includes("review")) return s.statusDesc.pending;
+        if (status.includes("📉") || normalized.includes("growing") || normalized.includes("waiting") || normalized.includes("gaining")) return s.statusDesc.waiting;
         return "";
     }
 
     const FILTERS: { key: FilterKey; label: string; match: (sub: SubmissionResponse) => boolean }[] = [
         { key: "all", label: s.filterAll, match: () => true },
-        { key: "active", label: s.filterActive, match: (sub) => sub.status.includes("🟢") },
-        { key: "pending", label: s.filterPending, match: (sub) => sub.status.includes("⏳") },
-        { key: "waiting", label: s.filterWaiting, match: (sub) => sub.status.includes("📉") },
-        { key: "rejected", label: s.filterRejected, match: (sub) => sub.status.includes("🔴") || sub.status.includes("❌") },
+        { key: "active", label: s.filterActive, match: (sub) => sub.status.includes("🟢") || /active|approved|complete|done/i.test(sub.status) },
+        { key: "pending", label: s.filterPending, match: (sub) => sub.status.includes("⏳") || /pending|review/i.test(sub.status) },
+        { key: "waiting", label: s.filterWaiting, match: (sub) => sub.status.includes("📉") || /growing|waiting|gaining/i.test(sub.status) },
+        { key: "rejected", label: s.filterRejected, match: (sub) => sub.status.includes("🔴") || sub.status.includes("❌") || /reject|declin|denied/i.test(sub.status) },
     ];
 
     const searched = searchQuery
@@ -85,7 +89,7 @@ export function SubmissionsPage() {
     const filtered = searched.filter(FILTERS.find((filter) => filter.key === activeFilter)!.match);
     const totalEarnings = searched.reduce((sum, sub) => sum + sub.calculated_payout, 0);
     const totalViews = searched.reduce((sum, sub) => sum + sub.play_count, 0);
-    const activeCount = searched.filter((sub) => sub.status.includes("🟢")).length;
+    const activeCount = searched.filter((sub) => sub.status.includes("🟢") || /active|approved|complete|done/i.test(sub.status)).length;
 
     return (
         <div className="space-y-7 pb-12 w-full">

@@ -85,19 +85,23 @@ const THUMB_GRADIENTS = [
 ];
 
 // ── Status helpers ────────────────────────────────────────────────────────────
-type StatusKey = "active" | "pending" | "waiting" | "rejected";
+type StatusKey = "active" | "pending" | "waiting" | "completed" | "rejected";
 
 function getStatusKey(status: string): StatusKey {
-    if (status.includes("🟢") || status.toLowerCase().includes("active")) return "active";
-    if (status.includes("⏳") || status.toLowerCase().includes("pending")) return "pending";
-    if (status.includes("📉") || status.toLowerCase().includes("growing") || status.toLowerCase().includes("waiting")) return "waiting";
-    return "rejected";
+    const normalized = status.toLowerCase();
+    if (status.includes("🔴") || status.includes("❌") || normalized.includes("reject") || normalized.includes("declin") || normalized.includes("denied")) return "rejected";
+    if (normalized.includes("complete") || normalized.includes("done") || normalized.includes("finished")) return "completed";
+    if (status.includes("🟢") || normalized.includes("active") || normalized.includes("approved")) return "active";
+    if (status.includes("⏳") || normalized.includes("pending") || normalized.includes("review")) return "pending";
+    if (status.includes("📉") || normalized.includes("growing") || normalized.includes("waiting") || normalized.includes("gaining")) return "waiting";
+    return "pending";
 }
 
 const STATUS_COLORS: Record<StatusKey, string> = {
     active: "text-emerald-600",
     pending: "text-amber-600",
     waiting: "text-blue-500",
+    completed: "text-emerald-500",
     rejected: "text-rose-500",
 };
 
@@ -116,7 +120,7 @@ export function DashboardPage() {
     const { data: campaigns, loading: _cl, error: campaignsError } = useCampaigns();
     const { data: submissions, loading: _sl, error: subsError } = useSubmissions();
     const { data: _payouts, loading: _pl, error: payoutsError } = usePayouts();
-    const { data: stats } = useStats();
+    const { data: stats, loading: statsLoading } = useStats();
 
     const shouldMockMe = shouldUsePortalMockData(Boolean(meError) && !meLoading);
     const shouldMockCampaigns = shouldUsePortalMockData(Boolean(campaignsError));
@@ -184,6 +188,7 @@ export function DashboardPage() {
         active: language === "th" ? "กำลังได้รายได้" : "Earning",
         pending: language === "th" ? "รอตรวจสอบ" : "Review",
         waiting: language === "th" ? "สะสมวิว" : "Building",
+        completed: language === "th" ? "เสร็จสิ้น" : "Completed",
         rejected: language === "th" ? "ถูกปฏิเสธ" : "Rejected",
     };
 
@@ -191,6 +196,7 @@ export function DashboardPage() {
         active: language === "th" ? "กำลังได้รายได้" : "Earning",
         pending: language === "th" ? "รอตรวจสอบ" : "Review",
         waiting: language === "th" ? "กำลังสะสมวิว" : "Building views",
+        completed: language === "th" ? "เสร็จสิ้น" : "Completed",
         rejected: language === "th" ? "ถูกปฏิเสธ" : "Rejected",
     };
 
@@ -273,10 +279,10 @@ export function DashboardPage() {
                             <span className="text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">+12.4%</span>
                         </div>
                         <p className="text-3xl font-black tracking-tight mt-2 font-mono">
-                            {stats ? `฿${fmt(stats.today_earnings)}` : "—"}
+                            {statsLoading ? "—" : stats ? `฿${fmt(stats.today_earnings)}` : "—"}
                         </p>
                         <div className="mt-3 -mx-1 text-emerald-500">
-                            <Spark data={stats ? stats.daily.map(d => d.earnings) : FALLBACK_SPARKLINE} height={32} width={160} />
+                            {!statsLoading && <Spark data={stats ? stats.daily.map(d => d.earnings) : []} height={32} width={160} />}
                         </div>
                     </div>
 
@@ -287,29 +293,33 @@ export function DashboardPage() {
                             <span className="text-xl">🔥</span>
                         </div>
                         <p className="text-3xl font-black tracking-tight mt-2 font-mono">
-                            {stats?.streak_days ?? "—"}<span className="text-base text-slate-400 font-bold ml-1">{label.streakDays}</span>
+                            {statsLoading ? "—" : (stats?.streak_days ?? "—")}<span className="text-base text-slate-400 font-bold ml-1">{label.streakDays}</span>
                         </p>
                         <div className="flex gap-1 mt-3">
                             {Array.from({ length: 7 }).map((_, i) => (
-                                <div key={i} className={`flex-1 h-2 rounded-full ${i < Math.min(stats?.streak_days ?? 0, 7) ? "bg-amber-400" : "bg-slate-200 dark:bg-white/10"}`} />
+                                <div key={i} className={`flex-1 h-2 rounded-full ${!statsLoading && i < Math.min(stats?.streak_days ?? 0, 7) ? "bg-amber-400" : "bg-slate-200 dark:bg-white/10"}`} />
                             ))}
                         </div>
                     </div>
 
                     {/* Monthly earnings — full width */}
                     {(() => {
-                        const dailyData = stats ? stats.daily.map(d => ({ e: d.earnings })) : FALLBACK_DAILY;
-                        const monthTotal = stats ? stats.daily.reduce((s, d) => s + d.earnings, 0) : 8920;
+                        const dailyData = stats ? stats.daily.map(d => ({ e: d.earnings })) : [];
+                        const monthTotal = stats ? stats.daily.reduce((s, d) => s + d.earnings, 0) : 0;
                         return (
                             <div className="col-span-2 bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm">
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-slate-500">{label.earningsThisMonth}</p>
-                                        <p className="text-2xl font-black tracking-tight mt-1 font-mono">฿{fmt(monthTotal)}</p>
+                                        <p className="text-2xl font-black tracking-tight mt-1 font-mono">
+                                            {statsLoading ? "—" : `฿${fmt(monthTotal)}`}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="text-blue-600 dark:text-blue-400">
-                                    <Bars data={dailyData} height={64} width={280} />
+                                <div className="text-blue-600 dark:text-blue-400 min-h-[64px] flex items-end">
+                                    {statsLoading
+                                        ? <div className="w-full h-8 rounded bg-slate-100 dark:bg-white/5 animate-pulse" />
+                                        : <Bars data={dailyData} height={64} width={280} />}
                                 </div>
                                 <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-1">
                                     <span>14d ago</span>

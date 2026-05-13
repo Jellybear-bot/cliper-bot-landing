@@ -7,6 +7,8 @@ import {
 } from "@/lib/auth-constants";
 import { createDiscordAccessTokenCookie, createSessionToken, type SessionUser } from "@/lib/session";
 
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
+
 export async function POST(request: Request) {
     try {
         const body = await request.json().catch(() => null) as { accessToken?: string } | null;
@@ -16,30 +18,32 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "accessToken is required" }, { status: 400 });
         }
 
-        const discordRes = await fetch("https://discord.com/api/v10/users/@me", {
+        // Verify via backend — this checks the clipper role AND auto-registers the user
+        const clipperRes = await fetch(`${BACKEND_URL}/api/clipper/auth`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
             cache: "no-store",
         });
 
-        const discordBody = await discordRes.json().catch(() => null) as {
-            id?: string;
-            username?: string;
-            global_name?: string | null;
+        const clipperBody = await clipperRes.json().catch(() => null) as {
+            data?: { discord_id?: string; username?: string };
+            message_th?: string;
             message?: string;
         } | null;
 
-        if (!discordRes.ok || !discordBody?.id || !discordBody?.username) {
-            return NextResponse.json(
-                { error: discordBody?.message ?? "Unable to fetch Discord profile" },
-                { status: discordRes.status || 401 },
-            );
+        if (!clipperRes.ok) {
+            const errMsg = clipperBody?.message_th ?? clipperBody?.message ?? "You do not have the required Clipper role.";
+            return NextResponse.json({ error: errMsg }, { status: clipperRes.status });
+        }
+
+        if (!clipperBody?.data?.discord_id || !clipperBody?.data?.username) {
+            return NextResponse.json({ error: "Unable to fetch clipper profile" }, { status: 401 });
         }
 
         const user: SessionUser = {
-            discord_id: discordBody.id,
-            username: discordBody.global_name?.trim() || discordBody.username,
+            discord_id: clipperBody.data.discord_id,
+            username: clipperBody.data.username,
         };
 
         cookies().set({
