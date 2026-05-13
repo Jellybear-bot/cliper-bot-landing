@@ -2,7 +2,7 @@
 
 import { ReactNode, startTransition, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCheck, Sun, Moon, Plus } from "lucide-react";
+import { AlertTriangle, CheckCheck, Sun, Moon, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { mockLogout } from "@/modules/app-portal/services/auth/actions";
@@ -198,6 +198,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     const profileInitials = profileName.split(/\s+/).filter(Boolean).slice(0, 2)
         .map((v) => v[0]?.toUpperCase() ?? "").join("") || "PU";
     const isVip = profileStatus.toLowerCase().includes("vip") || (clipperData?.payment_info ?? "").toLowerCase().includes("role:vip");
+    const demoNoticeText = language === "th"
+        ? "ขณะนี้ ClipHunter อยู่ในช่วงทดลองใช้งาน ข้อมูลทั้งหมดในระบบเดโม่จะถูกรีเซ็ตในวันที่ 22 พฤษภาคม และจะเปิดใช้งานจริงวันที่ 23 พฤษภาคม"
+        : "ClipHunter is currently in demo mode. All demo data will be reset on May 22, and the platform will officially launch on May 23.";
 
     const navLabels: Record<NavKey, string> = {
         overview: a.nav.overview,
@@ -349,6 +352,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <form action={mockLogout} className="hidden">
                             <button type="submit" />
                         </form>
+                    </div>
+                </div>
+                <div className="border-t border-amber-200/70 dark:border-amber-400/15 bg-amber-50/95 dark:bg-amber-400/10">
+                    <div className="mx-auto flex max-w-[1280px] items-start gap-2.5 px-4 py-2.5 text-sm font-medium leading-relaxed text-amber-950 sm:px-8 dark:text-amber-100">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                        <p>{demoNoticeText}</p>
                     </div>
                 </div>
             </header>
